@@ -5,14 +5,14 @@
   "author": "ifaswind",
   "main": "main.js",
   "main-menu": {
-    "扩展/自动压缩": {
+    "扩展/构建后自动压缩": {
       "message": "ccc-auto-compress:open-panel"
     }
   },
   "panel": {
     "main": "panel/index.js",
     "type": "dockable",
-    "title": "自动压缩",
+    "title": "构建后自动压缩",
     "width": 400,
     "height": 400
   },
