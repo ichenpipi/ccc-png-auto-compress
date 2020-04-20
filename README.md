@@ -4,7 +4,7 @@
 Cocos Creator 编辑器插件 - 在项目构建完成之后自动使用 pngquant 引擎压缩 png 资源
 
 #### 截图
-![Image text]https://gitee.com/ifaswind/image-storage/blob/master/ccc-auto-compress/screenshot.png
+![Image text](https://gitee.com/ifaswind/image-storage/blob/master/ccc-auto-compress/screenshot.png)
 
 #### 支持版本
 
