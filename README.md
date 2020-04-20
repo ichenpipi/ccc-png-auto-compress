@@ -1,7 +1,7 @@
-# CCC插件 构建后自动压缩
+# 构建后自动压缩
 
 #### 介绍
-Cocos Creator 插件 - 在项目构建完成之后自动使用 pngquant 引擎压缩 png 资源
+Cocos Creator 编辑器插件 - 在项目构建完成之后自动使用 pngquant 引擎压缩 png 资源
 
 #### 支持版本
 
