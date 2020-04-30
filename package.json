@@ -1,6 +1,6 @@
 {
   "name": "ccc-auto-compress",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "在项目构建完成之后自动压缩 png 资源",
   "author": "ifaswind",
   "main": "main.js",

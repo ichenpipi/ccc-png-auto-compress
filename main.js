@@ -24,6 +24,7 @@ module.exports = {
   },
 
   messages: {
+
     'open-panel'() {
       Editor.log('[AC] 自动压缩');
       Editor.Panel.open('ccc-auto-compress');
@@ -69,6 +70,7 @@ module.exports = {
 
       event.reply(null, config[name]);
     },
+
   },
 
   async onBuildStart(options, callback) {
@@ -81,10 +83,9 @@ module.exports = {
       config = JSON.parse(Fs.readFileSync(configFilePath));
     }
 
-    let enabled = config[name] ? config[name]['enabled'] : true;
+    let enabled = config[name] ? config[name]['enabled'] : false;
     if (enabled) {
       Editor.log('[AC] 自动压缩已启用');
-
       // 取消编辑器资源选中
       let cs = Editor.Selection.curSelection('asset');
       for (let i = 0; i < cs.length; i++) {
