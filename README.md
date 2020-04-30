@@ -6,9 +6,11 @@ Cocos Creator 编辑器插件 - 在项目构建完成之后自动使用 pngquant
 #### 截图
 ![01](https://gitee.com/ifaswind/image-storage/raw/master/ccc-auto-compress/screenshot.png)
 
-#### 支持版本
+#### 环境
 
-已测试 Cocos Creator 2.3.3 版本可正常使用
+平台：Windows、Mac（未测试）
+
+引擎：Cocos Creator 2.3.3
 
 #### 使用说明
 
