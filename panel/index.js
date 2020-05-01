@@ -23,17 +23,17 @@ Editor.Panel.extend({
     <ui-box-container class="layout vertical left">
       <div>
         <div class="layout horizontal center">
-          <label>启用</label>
+          <label>启用：</label>
           <ui-checkbox checked v-value="enabled"></ui-checkbox>
         </div>
         <br>
         <div class="layout horizontal center">
-          <label>最小图像质量</label>
+          <label>最小图像质量：</label>
           <ui-input v-value="minQuality"></ui-input>
         </div>
         <br>
         <div class="layout horizontal center">
-          <label>最大图像质量</label>
+          <label>最大图像质量：</label>
           <ui-input v-value="maxQuality"></ui-input>
         </div>
         <br>

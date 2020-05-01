@@ -6,7 +6,7 @@ let Os = require('os');
 let configFileUrl = 'packages://ccc-png-auto-compress/config.json';
 let defaultConfig = {
   enabled: false,
-  minQuality: 20,
+  minQuality: 40,
   maxQuality: 80,
   speed: 3,
 };
@@ -51,8 +51,8 @@ module.exports = {
       let configFilePath = Editor.url(configFileUrl);
       let configs = Object.create(null);
       if (Fs.existsSync(configFilePath)) configs = JSON.parse(Fs.readFileSync(configFilePath));
-      configs[projectName] = config;
       // 写入配置
+      configs[projectName] = config;
       let stringData = JSON.stringify(configs, null, '\t')
       Fs.writeFileSync(configFilePath, stringData);
       // log
@@ -102,10 +102,10 @@ module.exports = {
       // 设置压缩命令
       let colorParam = ' 256';
       let qualityParam = ' --quality=' + config.minQuality + '-' + config.maxQuality;
-      let speedParam = ' -s ' + config.speed;
+      let speedParam = ' --speed ' + config.speed;
       let skipParam = ' --skip-if-larger';
       let otherParam = ' --ext=.png --force';
-      let compressParam = '"' + pngquantPath + '"' + ' ' + colorParam + qualityParam + speedParam + skipParam + otherParam;
+      let compressOptions = colorParam + qualityParam + speedParam + skipParam + otherParam;
 
       // 压缩 png 资源
       let promises = [];
@@ -126,7 +126,7 @@ module.exports = {
           if (path.indexOf('.png') !== -1) {
             promises.push(new Promise(res => {
               let sizeBefore = stat.size / 1000;
-              let command = compressParam + ' -- ' + '"' + path + '"';
+              let command = '"' + pngquantPath + '"' + ' ' + compressOptions + ' -- ' + '"' + path + '"';
               Exec(command, (error, stdout, stderr) => {
                 if (error) {
                   // 失败
@@ -137,7 +137,7 @@ module.exports = {
                       failLog += '\n   - 失败原因：code 98 压缩后体积增大';
                       break;
                     case 99:
-                      failLog += '\n   - 失败原因：code 99 压缩后质量过低';
+                      failLog += '\n   - 失败原因：code 99 压缩后质量低于已配置最小质量';
                       break;
                     default:
                       failLog += '\n   - 失败原因：code ' + error.code;
