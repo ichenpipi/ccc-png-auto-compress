@@ -151,7 +151,6 @@ module.exports = {
                   let savedSize = '-' + (sizeBefore - sizeAfter).toFixed(3);
                   let savedRatio = (((sizeBefore - sizeAfter) / sizeBefore) * 100).toFixed(3);
                   succeedLog += '\n √ 成功     | ' + fileName.padEnd(40, ' ') + ' | ' + (sizeBefore + 'KB').padEnd(10, ' ') + ' --> ' + (sizeAfter + 'KB').padEnd(10, ' ') + ' | ' + (savedSize + 'KB').padEnd(25, ' ') + ' | ' + (savedRatio + '%').padEnd(10, ' ');
-                  // succeedLog += `\n √ 成功     | ${name.padEnd(30, ' ')} | ${_sizeBefore.padEnd(10, ' ')} --> ${_sizeAfter.padEnd(10, ' ')} | ${savedSize.padEnd(10, ' ')} | ${savedRatio.padEnd(10, ' ')}`;
                 }
                 res();
               });
