@@ -1,12 +1,12 @@
 {
-  "name": "ccc-auto-compress",
+  "name": "ccc-png-auto-compress",
   "version": "1.0.0",
   "description": "在项目构建完成之后自动压缩 png 资源",
-  "author": "ifaswind",
+  "author": "文弱书生陈皮皮",
   "main": "main.js",
   "main-menu": {
     "扩展/构建后自动压缩 PNG": {
-      "message": "ccc-auto-compress:open-panel"
+      "message": "ccc-png-auto-compress:open-panel"
     }
   },
   "panel": {
@@ -15,6 +15,5 @@
     "title": "构建后自动压缩 PNG",
     "width": 400,
     "height": 300
-  },
-  "scene-script": "scene.js"
+  }
 }
