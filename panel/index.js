@@ -44,7 +44,7 @@ Editor.Panel.extend({
         </div>
       </div>
       <br>
-      <ui-button class="button blue big" @click="saveConfig()">保存</ui-button>
+      <ui-button class="blue big" @click="saveConfig()">保存</ui-button>
     </ui-box-container>
   </div>
   `,

@@ -18,11 +18,14 @@ function getConfig() {
   let projectPath = Editor.projectPath || Editor.Project.path;
   let projectName = projectPath.slice(projectPath.lastIndexOf('\\') + 1);
   let configFilePath = Editor.url(configFileUrl);
+  let config = null;
   if (Fs.existsSync(configFilePath)) {
-    return JSON.parse(Fs.readFileSync(configFilePath))[projectName];
-  } else {
-    return defaultConfig;
+    config = JSON.parse(Fs.readFileSync(configFilePath))[projectName];
   }
+  if (!config) {
+    config = defaultConfig;
+  }
+  return config;
 };
 
 module.exports = {
@@ -45,16 +48,18 @@ module.exports = {
     },
 
     'save-config'(event, config) {
-      // 读取配置
       let projectPath = Editor.projectPath || Editor.Project.path;
       let projectName = projectPath.slice(projectPath.lastIndexOf('\\') + 1);
       let configFilePath = Editor.url(configFileUrl);
-      let configs = Object.create(null);
-      if (Fs.existsSync(configFilePath)) configs = JSON.parse(Fs.readFileSync(configFilePath));
+      let configs = {};
+      // 读取配置
+      if (Fs.existsSync(configFilePath)) {
+        configs = JSON.parse(Fs.readFileSync(configFilePath));
+      }
       // 写入配置
       configs[projectName] = config;
-      let stringData = JSON.stringify(configs, null, '\t')
-      Fs.writeFileSync(configFilePath, stringData);
+      let string = JSON.stringify(configs, null, '\t')
+      Fs.writeFileSync(configFilePath, string);
       // log
       let enabled = configs[projectName]['enabled'];
       if (enabled) Editor.log('[PAC] 已启用 PNG 自动压缩');
