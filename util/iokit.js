@@ -1,11 +1,12 @@
-let Fs = require('fs');
-let Path = require('path');
+const Fs = require('fs');
+const Path = require('path');
 
-module.exports = {
+const IOUtil = {
+
     /**
      * 复制文件/文件夹
-     * @param {*} srcPath 源路径
-     * @param {*} destPath 目标路径
+     * @param {string} srcPath 源路径
+     * @param {string} destPath 目标路径
      */
     copy(srcPath, destPath) {
         if (Fs.existsSync(srcPath)) {
@@ -25,29 +26,31 @@ module.exports = {
                 Fs.writeFileSync(destPath, data);
             }
         } else {
-            if (Editor) Editor.log('[Copy] 路径不存在！ ' + srcPath);
+            if (Editor) Editor.log('[IO Util]', '路径不存在', srcPath);
         }
     },
 
     /**
      * 删除文件/文件夹
-     * @param {*} srcPath 源路径
+     * @param {string} path 源路径
      */
-    delete(srcPath) {
-        if (Fs.existsSync(srcPath)) {
-            let stat = Fs.statSync(srcPath);
+    delete(path) {
+        if (Fs.existsSync(path)) {
+            let stat = Fs.statSync(path);
             if (stat.isDirectory()) {
-                let fileNames = Fs.readdirSync(srcPath);
+                let fileNames = Fs.readdirSync(path);
                 for (let name of fileNames) {
-                    let path = Path.join(srcPath, name);
-                    this.delete(path);
+                    let _path = Path.join(path, name);
+                    this.delete(_path);
                 }
-                Fs.rmdirSync(srcPath);
+                Fs.rmdirSync(path);
             } else if (stat.isFile()) {
-                Fs.unlinkSync(srcPath);
+                Fs.unlinkSync(path);
             }
         } else {
-            if (Editor) Editor.log('[Delete] 路径不存在！ ' + srcPath);
+            if (Editor) Editor.log('[IO Util]', '路径不存在', path);
         }
     }
 }
+
+module.exports = IOUtil;
