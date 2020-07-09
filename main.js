@@ -73,6 +73,11 @@ module.exports = {
 
   },
 
+  /**
+  * 
+  * @param {BuildOptions} options 
+  * @param {Function} callback 
+  */
   onBuildStart(options, callback) {
     let config = getConfig();
     if (config && config.enabled) {
@@ -87,6 +92,11 @@ module.exports = {
     callback();
   },
 
+  /**
+   * 
+   * @param {BuildOptions} options 
+   * @param {Function} callback 
+   */
   async onBuildFinished(options, callback) {
     let config = getConfig();
     if (config && config.enabled) {
@@ -103,7 +113,7 @@ module.exports = {
           pngquantPath = Editor.url('packages://ccc-png-auto-compress/pngquant/mac/pngquant');
           break;
       }
-      Editor.log('[PAC]', 'pngquant 引擎路径为', pngquantPath);
+      Editor.log('[PAC]', '压缩引擎路径为', pngquantPath);
       // 设置压缩命令
       let qualityParam = `--quality ${config.minQuality}-${config.maxQuality}`;
       let speedParam = `--speed ${config.speed}`;
@@ -117,7 +127,7 @@ module.exports = {
       let promises = [];
       let succeedCount = 0;
       let failCount = 0;
-      let logHeader = '\n # 结果     | 名称                                      | 压缩前      --> 压缩后      | 压缩大小                   | 压缩率';
+      let logHeader = `\n # ${'Result'.padEnd(10, ' ')} | ${'Name / Path'.padEnd(45, ' ')} | ${'Size Before'.padEnd(15, ' ')} -> ${'Size After'.padEnd(15, ' ')} | ${'Saved Size'.padEnd(15, ' ')} | ${'Compressibility'.padEnd(20, ' ')}`;
       let succeedLog = '';
       let failLog = '';
       let compress = (path) => {
@@ -132,19 +142,20 @@ module.exports = {
           if (Path.extname(path) === '.png') {
             promises.push(new Promise(res => {
               let sizeBefore = stat.size / 1024;
+              // pngquant $OPTIONS -- "$FILE"
               let command = `"${pngquantPath}" ${compressOptions} -- "${path}"`;
-              Editor.log(command);
               ChildProcess.exec(command, (error, stdout, stderr) => {
                 if (error) {
                   // 失败
                   failCount++;
-                  failLog += '\n × 失败     | ' + path;
+                  failLog += '\n';
+                  failLog += ` - ${'Fail'.padEnd(10, ' ')} | ${path}`;
                   switch (error.code) {
                     case 98:
-                      failLog += '\n   - 失败原因：code 98 压缩后体积增大';
+                      failLog += '\n   - 失败原因：code 98' + ' 压缩后体积增大';
                       break;
                     case 99:
-                      failLog += '\n   - 失败原因：code 99 压缩后质量低于已配置最低质量';
+                      failLog += '\n   - 失败原因：code 99' + ' 压缩后质量低于已配置最低质量';
                       break;
                     default:
                       failLog += '\n   - 失败原因：code ' + error.code;
@@ -153,13 +164,13 @@ module.exports = {
                 } else {
                   // 成功
                   succeedCount++;
-                  let fileName = Path.basename(path, '.png');
+                  let fileName = Path.basename(path);
+                  Editor.log(options.buildResults.getAssetType(Path.basename(path, '.png')))
                   let sizeAfter = Fs.statSync(path).size / 1024;
                   let savedSize = sizeBefore - sizeAfter;
-                  let savedRatio = (((sizeBefore - sizeAfter) / sizeBefore) * 100);
-                  // succeedLog += '\n √ 成功     | ' + fileName.padEnd(40, ' ') + ' | ' + (sizeBefore + 'KB').padEnd(10, ' ') + ' --> ' + (sizeAfter.toFixed(3) + 'KB').padEnd(10, ' ') + ' | ' + (savedSize.toFixed(3) + 'KB').padEnd(25, ' ') + ' | ' + (savedRatio.toFixed(3) + '%').padEnd(10, ' ');
+                  let savedRatio = savedSize / sizeBefore * 100;
                   succeedLog += '\n';
-                  succeedLog += `√ 成功     ${fileName.padEnd(40, ' ')} | ${(sizeBefore + 'KB').padEnd(10, ' ')} --> ${(sizeAfter.toFixed(3) + 'KB').padEnd(10, ' ')} | ${(savedSize.toFixed(3) + 'KB').padEnd(25, ' ')} | ${(savedRatio.toFixed(3) + '%').padEnd(10, ' ')}`;
+                  succeedLog += ` + ${'Succeed'.padEnd(10, ' ')} | ${fileName.padEnd(45, ' ')} | ${(sizeBefore.toFixed(2) + ' KB').padEnd(15, ' ')} -> ${(sizeAfter.toFixed(2) + ' KB').padEnd(15, ' ')} | ${(savedSize.toFixed(2) + ' KB').padEnd(15, ' ')} | ${(savedRatio.toFixed(2) + '%').padEnd(20, ' ')}`;
                 }
                 res();
               });
@@ -167,10 +178,10 @@ module.exports = {
           }
         }
       }
-      Editor.log('[PAC]', '开始压缩 PNG 资源，请勿进行其他操作...');
       // 资源路径
       let resPath = Path.join(options.dest, 'res');
       Editor.log('[PAC]', '资源路径为 ' + resPath);
+      Editor.log('[PAC]', '开始压缩 PNG 资源，请勿进行其他操作...');
       compress(resPath);
       await Promise.all(promises);
       await new Promise(res => setTimeout(res, 250));

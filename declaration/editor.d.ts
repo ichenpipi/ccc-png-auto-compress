@@ -1,5 +1,7 @@
 /**
  * Cocos Creator 编辑器命名空间
+ * @author 陈皮皮（ifaswind）
+ * @see https://gitee.com/ifaswind/eazax-ccc/blob/master/declaration/editor.d.ts
  */
 declare namespace Editor {
 
@@ -46,16 +48,16 @@ declare namespace Editor {
      */
     function url(url: string, encode?: string): string;
 
-    namespace Project {
+    class Project {
 
         /**
          * Absolute path for current open project.
          */
-        readonly let path: string;
+        static readonly path: string;
 
-        readonly let name: string;
+        static readonly name: string;
 
-        readonly let id: string;
+        static readonly id: string;
     }
 
     namespace Builder {
@@ -65,14 +67,14 @@ declare namespace Editor {
          * @param eventName The name of the event
          * @param callback The event callback
          */
-        function on(eventName: string, callback: (options: Options, cb: Function) => void): void;
+        function on(eventName: string, callback: (options: BuildOptions, cb: Function) => void): void;
 
         /**
          * 
          * @param eventName The name of the event
          * @param callback The event callback
          */
-        function once(eventName: string, callback: (options: Options, cb: Function) => void): void;
+        function once(eventName: string, callback: (options: BuildOptions, cb: Function) => void): void;
 
         /**
          * 
@@ -362,5 +364,118 @@ interface BuildOptions {
     project: string;
     projectName: string;
     debugBuildWorker: boolean;
-    buildResults: any;
+
+    /**
+     * 从 v2.4 开始，options 中不再提供 buildResults，而是提供了一个 bundles 数组。
+     */
+    buildResults: BuildResults;
+
+    bundles: bundle[];
+}
+
+declare class BuildResults {
+
+    /**
+     * Returns true if the asset contains in the build.
+     * 指定的 uuid 资源是否包含在构建资源中
+     * @param uuid 需要检测的资源 uuid
+     * @param assertContains 不包含时是否打印报错信息
+     */
+    containsAsset(uuid: string, assertContains: boolean): boolean;
+
+    /**
+     * Returns the uuids of all assets included in the build.
+     * 返回构建资源中包含的所有资源的 uuid
+     */
+    getAssetUuids(): string[];
+
+    /**
+     * Return the uuids of assets which are dependencies of the input, also include all indirect dependencies.
+     * The list returned will not include the input uuid itself.
+     * 获取指定 uuid 资源中的所有依赖资源，返回的列表中不包含自身
+     * @param uuid 指定的 uuid 资源
+     */
+    getDependencies(uuid: string): string[];
+
+    /**
+     * Get type of asset defined in the engine.
+     * You can get the constructor of an asset by using `cc.js.getClassByName(type)`.
+     * 获取指定 uuid 的资源在引擎中定义的资源类型
+     * 同时可以使用 cc.js.getClassByName(type) 进行获取资源的构造函数
+     * @param uuid 指定的 uuid 资源
+     */
+    getAssetType(uuid: string): string;
+
+    /**
+     * Get the path of the specified native asset such as texture. Returns empty string if not found.
+     * 获取指定 uuid 资源（例如纹理）的存放路径（如果找不到，则返回空字符串）
+     * @param uuid 指定的 uuid 资源
+     */
+    getNativeAssetPath(uuid: string): string;
+
+    /**
+     * 获取指定 uuid 资源（例如纹理）的所有存放路径（如果找不到，则返回空数组）
+     * 例如：需要获取纹理多种压缩格式的存放资源路径时，即可使用该函数
+     * @param uuid - 指定的 uuid 资源
+     */
+    getNativeAssetPaths(uuid: string): string[];
+
+}
+
+interface bundle {
+
+    /**
+     * bundle 的根目录
+     */
+    root: string;
+
+    /**
+     * bundle 的输出目录
+     */
+    dest: string;
+
+    /**
+     * 脚本的输出目录
+     */
+    scriptDest: string;
+
+    /**
+     * bundle 的名称
+     */
+    name: string;
+
+    /**
+     * bundle 的优先级
+     */
+    priority: number;
+
+    /**
+     * bundle 中包含的场景
+     */
+    scenes: string[];
+
+    /**
+     * bundle 的压缩类型
+     */
+    compressionType: 'subpackage' | 'normal' | 'none' | 'merge_all_json' | 'zip';
+
+    /**
+     * bundle 所构建出来的所有资源
+     */
+    buildResults: BuildResults;
+
+    /**
+     * bundle 的版本信息，由 config 生成
+     */
+    version: string;
+
+    /**
+     * bundle 的 config.json 文件
+     */
+    config: any;
+
+    /**
+     * bundle 是否是远程包
+     */
+    isRemote: boolean;
 }
