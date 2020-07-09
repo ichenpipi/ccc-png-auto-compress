@@ -165,7 +165,6 @@ module.exports = {
                   // 成功
                   succeedCount++;
                   let fileName = Path.basename(path);
-                  Editor.log(options.buildResults.getAssetType(Path.basename(path, '.png')))
                   let sizeAfter = Fs.statSync(path).size / 1024;
                   let savedSize = sizeBefore - sizeAfter;
                   let savedRatio = savedSize / sizeBefore * 100;
