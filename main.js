@@ -6,6 +6,8 @@ const Os = require('os');
 const configFileDir = 'local';
 const configFileName = 'ccc-png-auto-compress.json';
 
+let pngquantPath = null; // 引擎路径
+
 /**
  * 保存配置
  * @param {*} config 
@@ -55,7 +57,6 @@ module.exports = {
   messages: {
 
     'open-panel'() {
-      Editor.log('[PAC]', '打开配置面板');
       Editor.Panel.open('ccc-png-auto-compress');
     },
 
@@ -78,10 +79,32 @@ module.exports = {
   * @param {BuildOptions} options 
   * @param {Function} callback 
   */
-  onBuildStart(options, callback) {
+  async onBuildStart(options, callback) {
     let config = getConfig();
     if (config && config.enabled) {
-      Editor.log('[PAC]', 'PNG 自动压缩已启用');
+      Editor.log('[PAC]', '将在构建完成后自动压缩 PNG 资源');
+
+      // 获取引擎路径
+      if (Os.platform() === 'darwin') {
+        // MacOS
+        pngquantPath = Editor.url('packages://ccc-png-auto-compress/pngquant/mac/pngquant');
+      } else {
+        // Windows
+        pngquantPath = Editor.url('packages://ccc-png-auto-compress/pngquant/windows/pngquant');
+      }
+      Editor.log('[PAC]', '压缩引擎路径为', pngquantPath);
+
+      // 设置 pngquant 文件权限（仅 MacOS）
+      if (Os.platform() === 'darwin') {
+        let command = `chmod a+x ${pngquantPath}`;
+        await new Promise(res => {
+          ChildProcess.exec(command, (error, stdout, stderr) => {
+            if (error) Editor.log('[PAC]', '设置引擎文件执行权限失败！');
+            res();
+          });
+        });
+      }
+
       // 取消编辑器资源选中
       let assets = Editor.Selection.curSelection('asset');
       for (let i = 0; i < assets.length; i++) {
@@ -101,19 +124,7 @@ module.exports = {
     let config = getConfig();
     if (config && config.enabled) {
       Editor.log('[PAC]', '准备压缩 PNG 资源...');
-      // 获取引擎路径
-      let pngquantPath;
-      switch (Os.platform()) {
-        case 'win32':
-          Editor.log('[PAC]', '当前操作系统为 Windows');
-          pngquantPath = Editor.url('packages://ccc-png-auto-compress/pngquant/windows/pngquant');
-          break;
-        case 'darwin':
-          Editor.log('[PAC]', '当前操作系统为 Mac OS');
-          pngquantPath = Editor.url('packages://ccc-png-auto-compress/pngquant/mac/pngquant');
-          break;
-      }
-      Editor.log('[PAC]', '压缩引擎路径为', pngquantPath);
+
       // 设置压缩命令
       let qualityParam = `--quality ${config.minQuality}-${config.maxQuality}`;
       let speedParam = `--speed ${config.speed}`;
@@ -123,7 +134,7 @@ module.exports = {
       let colorsParam = config.colors;
       let compressOptions = `${qualityParam} ${speedParam} ${skipParam} ${outputParam} ${writeParam} ${colorsParam}`;
 
-      // 压缩 png 资源
+      // 准备材料
       let promises = [];
       let succeedCount = 0;
       let failCount = 0;
@@ -148,17 +159,16 @@ module.exports = {
                 if (error) {
                   // 失败
                   failCount++;
-                  failLog += '\n';
-                  failLog += ` - ${'Fail'.padEnd(10, ' ')} | ${path}`;
+                  failLog += `\n - ${'Fail'.padEnd(10, ' ')} | ${path}`;
                   switch (error.code) {
                     case 98:
-                      failLog += '\n   - 失败原因：code 98' + ' 压缩后体积增大';
+                      failLog += `\n ${''.padEnd(5, ' ')} - 失败原因：code 98 压缩后体积增大`;
                       break;
                     case 99:
-                      failLog += '\n   - 失败原因：code 99' + ' 压缩后质量低于已配置最低质量';
+                      failLog += `\n ${''.padEnd(5, ' ')} - 失败原因：code 99 压缩后质量低于已配置最低质量`;
                       break;
                     default:
-                      failLog += '\n   - 失败原因：code ' + error.code;
+                      failLog += `\n ${''.padEnd(5, ' ')} - 失败原因：code ${error.code}`;
                       break;
                   }
                 } else {
@@ -168,8 +178,7 @@ module.exports = {
                   let sizeAfter = Fs.statSync(path).size / 1024;
                   let savedSize = sizeBefore - sizeAfter;
                   let savedRatio = savedSize / sizeBefore * 100;
-                  succeedLog += '\n';
-                  succeedLog += ` + ${'Succeed'.padEnd(10, ' ')} | ${fileName.padEnd(45, ' ')} | ${(sizeBefore.toFixed(2) + ' KB').padEnd(15, ' ')} -> ${(sizeAfter.toFixed(2) + ' KB').padEnd(15, ' ')} | ${(savedSize.toFixed(2) + ' KB').padEnd(15, ' ')} | ${(savedRatio.toFixed(2) + '%').padEnd(20, ' ')}`;
+                  succeedLog += `\n + ${'Succeed'.padEnd(10, ' ')} | ${fileName.padEnd(45, ' ')} | ${(sizeBefore.toFixed(2) + ' KB').padEnd(15, ' ')} -> ${(sizeAfter.toFixed(2) + ' KB').padEnd(15, ' ')} | ${(savedSize.toFixed(2) + ' KB').padEnd(15, ' ')} | ${(savedRatio.toFixed(2) + '%').padEnd(20, ' ')}`;
                 }
                 res();
               });
@@ -177,13 +186,13 @@ module.exports = {
           }
         }
       }
-      // 资源路径
+
+      // 开始压缩
       let resPath = Path.join(options.dest, 'res');
       Editor.log('[PAC]', '资源路径为 ' + resPath);
       Editor.log('[PAC]', '开始压缩 PNG 资源，请勿进行其他操作...');
       compress(resPath);
       await Promise.all(promises);
-      await new Promise(res => setTimeout(res, 250));
       Editor.log('[PAC]', '压缩完成！');
       Editor.log('[PAC]', '压缩结果： ' + succeedCount + ' 张成功， ' + failCount + ' 张失败！ >>>' + logHeader + succeedLog + failLog);
     }
