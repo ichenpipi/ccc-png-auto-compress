@@ -6,8 +6,6 @@ const Os = require('os');
 const configFileDir = 'local';
 const configFileName = 'ccc-png-auto-compress.json';
 
-let pngquantPath = null; // 引擎路径
-
 /**
  * 保存配置
  * @param {*} config 
@@ -26,7 +24,7 @@ function saveConfig(config) {
   // 写入配置
   for (let key in config) { object[key] = config[key]; }
   Fs.writeFileSync(configFilePath, JSON.stringify(object, null, 2));
-  Editor.log('[PAC]', '配置文件路径', configFilePath);
+  return configFilePath;
 }
 
 /**
@@ -62,7 +60,8 @@ module.exports = {
 
     'save-config'(event, config) {
       Editor.log('[PAC]', '保存配置');
-      saveConfig(config);
+      let configFilePath = saveConfig(config);
+      Editor.log('[PAC]', '配置文件路径', configFilePath);
       event.reply(null, true);
     },
 
@@ -79,20 +78,10 @@ module.exports = {
   * @param {BuildOptions} options 
   * @param {Function} callback 
   */
-  async onBuildStart(options, callback) {
+  onBuildStart(options, callback) {
     let config = getConfig();
     if (config && config.enabled) {
       Editor.log('[PAC]', '将在构建完成后自动压缩 PNG 资源');
-
-      // 获取引擎路径
-      if (Os.platform() === 'darwin') {
-        // MacOS
-        pngquantPath = Editor.url('packages://ccc-png-auto-compress/pngquant/mac/pngquant');
-      } else {
-        // Windows
-        pngquantPath = Editor.url('packages://ccc-png-auto-compress/pngquant/windows/pngquant');
-      }
-      Editor.log('[PAC]', '压缩引擎路径为', pngquantPath);
 
       // 取消编辑器资源选中
       let assets = Editor.Selection.curSelection('asset');
@@ -114,15 +103,32 @@ module.exports = {
     if (config && config.enabled) {
       Editor.log('[PAC]', '准备压缩 PNG 资源...');
 
+      // 获取引擎路径
+      let pngquantPath = '';
+      if (Os.platform() === 'darwin') {
+        // MacOS
+        pngquantPath = Editor.url('packages://ccc-png-auto-compress/pngquant/mac/pngquant');
+      } else {
+        // Windows
+        pngquantPath = Editor.url('packages://ccc-png-auto-compress/pngquant/windows/pngquant');
+      }
+      Editor.log('[PAC]', '压缩引擎路径为', pngquantPath);
+
       // 设置 pngquant 文件权限（仅 MacOS）
       if (Os.platform() === 'darwin') {
-        let command = `chmod a+x ${pngquantPath}`;
-        await new Promise(res => {
-          ChildProcess.exec(command, (error, stdout, stderr) => {
-            if (error) Editor.log('[PAC]', '设置引擎文件执行权限失败！');
-            res();
-          });
-        });
+        if (Fs.statSync(pngquantPath).mode != 33261) {
+          // 默认为 33188
+          Editor.log('[PAC]', '设置引擎文件执行权限');
+          // Fs.chmodSync(pngquantPath, 0755);
+          Fs.chmodSync(pngquantPath, 33261);
+        }
+        // let command = `chmod a+x ${pngquantPath}`;
+        // await new Promise(res => {
+        //   ChildProcess.exec(command, (error, stdout, stderr) => {
+        //     if (error) Editor.log('[PAC]', '设置引擎文件执行权限失败！');
+        //     res();
+        //   });
+        // });
       }
 
       // 设置压缩命令
@@ -192,12 +198,12 @@ module.exports = {
 
       // 开始压缩
       let resPath = Path.join(options.dest, 'res');
-      Editor.log('[PAC]', '资源路径为 ' + resPath);
+      Editor.log('[PAC]', '资源路径为', resPath);
       Editor.log('[PAC]', '开始压缩 PNG 资源，请勿进行其他操作...');
       compress(resPath);
       await Promise.all(promises);
       Editor.log('[PAC]', '压缩完成！');
-      Editor.log('[PAC]', '压缩结果： ' + succeedCount + ' 张成功， ' + failCount + ' 张失败！ >>>' + logHeader + succeedLog + failLog);
+      Editor.log('[PAC]', `压缩结果：${succeedCount} 张成功，${failCount} 张失败 >>>` + logHeader + succeedLog + failLog);
     }
 
     callback();
