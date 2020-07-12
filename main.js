@@ -94,17 +94,6 @@ module.exports = {
       }
       Editor.log('[PAC]', '压缩引擎路径为', pngquantPath);
 
-      // 设置 pngquant 文件权限（仅 MacOS）
-      if (Os.platform() === 'darwin') {
-        let command = `chmod a+x ${pngquantPath}`;
-        await new Promise(res => {
-          ChildProcess.exec(command, (error, stdout, stderr) => {
-            if (error) Editor.log('[PAC]', '设置引擎文件执行权限失败！');
-            res();
-          });
-        });
-      }
-
       // 取消编辑器资源选中
       let assets = Editor.Selection.curSelection('asset');
       for (let i = 0; i < assets.length; i++) {
@@ -124,6 +113,17 @@ module.exports = {
     let config = getConfig();
     if (config && config.enabled) {
       Editor.log('[PAC]', '准备压缩 PNG 资源...');
+
+      // 设置 pngquant 文件权限（仅 MacOS）
+      if (Os.platform() === 'darwin') {
+        let command = `chmod a+x ${pngquantPath}`;
+        await new Promise(res => {
+          ChildProcess.exec(command, (error, stdout, stderr) => {
+            if (error) Editor.log('[PAC]', '设置引擎文件执行权限失败！');
+            res();
+          });
+        });
+      }
 
       // 设置压缩命令
       let qualityParam = `--quality ${config.minQuality}-${config.maxQuality}`;
@@ -166,6 +166,9 @@ module.exports = {
                       break;
                     case 99:
                       failLog += `\n ${''.padEnd(5, ' ')} - 失败原因：code 99 压缩后质量低于已配置最低质量`;
+                      break;
+                    case 127:
+                      failLog += `\n ${''.padEnd(5, ' ')} - 失败原因：code 127 请设置引擎执行权限`;
                       break;
                     default:
                       failLog += `\n ${''.padEnd(5, ' ')} - 失败原因：code ${error.code}`;
