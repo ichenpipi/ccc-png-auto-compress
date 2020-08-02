@@ -39,9 +39,7 @@
 
 
 
-# 公众号
-
-## 菜鸟小栈
+# 菜鸟小栈
 
 我是陈皮皮，这是我的个人公众号，专注但不仅限于游戏开发、前端和后端技术记录与分享。
 
@@ -50,3 +48,11 @@
 > Input and output.
 
 ![](https://gitee.com/ifaswind/image-storage/raw/master/weixin/official-account.png)
+
+
+
+## 交流群
+
+皮皮创建了一个游戏开发交流群，供大家交流经验、问题求助等。
+
+感兴趣的小伙伴可以添加我微信 `im_chenpipi` 并留言 `加群`。
