@@ -8,7 +8,7 @@
 
 如果此项目对你有帮助，请不要忘记 [![star](https://gitee.com/ifaswind/ccc-png-auto-compress/badge/star.svg?theme=dark)](https://gitee.com/ifaswind/ccc-png-auto-compress/stargazers)
 
-如有使用上的问题，可以到 gitee 上提 issue 或者添加我的微信 `im_chenpipi` 并留言。
+如有使用上的问题，可以在 gitee 上提 issue 或者添加我的微信 `im_chenpipi` 并留言。
 
 
 
@@ -30,7 +30,7 @@
 
 1. 将插件文件夹 `ccc-auto-compress` 放置在 `${用户目录}/.CocosCreator/packages` 目录下即可
 3. 本插件默认禁用，需自行启用
-2. 点击顶部菜单栏的 **[ 扩展 --> 自动压缩 PNG ]** 打开插件配置面板
+2. 点击顶部菜单栏的 **[ 扩展 --> 自动压缩 PNG 资源 ]** 打开插件配置面板
 4. 配置文件存放路径：`${项目目录}/local/ccc-png-auto-compress.json`
 
 

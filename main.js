@@ -151,7 +151,7 @@ module.exports = {
 
 /**
  * 保存配置
- * @param {Object} config 
+ * @param {object} config 
  */
 function saveConfig(config) {
   // 查找目录
@@ -188,7 +188,7 @@ function getConfig() {
  * @param {string} srcPath 文件路径
  * @param {string} compressOptions 文件路径
  * @param {Promise[]} queue 压缩任务队列
- * @param {Object} log 日志对象
+ * @param {object} log 日志对象
  */
 function compress(srcPath, compressOptions, queue, log) {
   FileUtil.map(srcPath, (filePath) => {
