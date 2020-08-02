@@ -4,13 +4,15 @@
 
 [Cocos Creator 编辑器插件] 项目构建完成之后自动压缩 PNG 资源
 
+如果此项目对你有帮助，请不要忘记 [![star](https://gitee.com/ifaswind/ccc-png-auto-compress/badge/star.svg?theme=dark)](https://gitee.com/ifaswind/ccc-png-auto-compress/stargazers)
+
 - 压缩引擎：[pngquant 2.12.5](https://pngquant.org/)
 
 
 
 ## 截图
 
-![screenshot](https://gitee.com/ifaswind/image-storage/raw/master/ccc-auto-compress/screenshot.png)
+![screenshot](https://gitee.com/ifaswind/image-storage/raw/master/repositories/ccc-png-auto-compress/screenshot.png)
 
 
 
@@ -27,7 +29,7 @@
 1. 将插件文件夹 `ccc-auto-compress` 放置在 `${用户目录}/.CocosCreator/packages` 目录下即可
 3. 本插件默认禁用，需自行启用
 2. 点击顶部菜单栏的 **[ 扩展 --> 自动压缩 PNG ]** 打开插件配置面板
-4. 配置文件存放位置：`${项目目录}/local/ccc-png-auto-compress.json`
+4. 配置文件存放路径：`${项目目录}/local/ccc-png-auto-compress.json`
 
 
 
@@ -45,4 +47,4 @@
 
 > Input and output.
 
-![](http://qn.chenpipi.cn/image/weixin/official-account.png)
+![](https://gitee.com/ifaswind/image-storage/raw/master/weixin/official-account.png)

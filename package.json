@@ -1,18 +1,18 @@
 {
   "name": "ccc-png-auto-compress",
-  "version": "1.0.1",
+  "version": "1.0.1.20200802",
   "description": "项目构建完成之后自动压缩 PNG 资源",
   "author": "文弱书生陈皮皮",
   "main": "main.js",
   "main-menu": {
-    "扩展/自动压缩 PNG": {
+    "i18n:MAIN_MENU.package.title/自动压缩 PNG 资源": {
       "message": "ccc-png-auto-compress:open-panel"
     }
   },
   "panel": {
     "main": "panel/index.js",
     "type": "dockable",
-    "title": "构建自动压缩 PNG 资源",
+    "title": "自动压缩 PNG 资源",
     "width": 500,
     "height": 350
   }

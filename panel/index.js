@@ -7,7 +7,7 @@ Editor.Panel.extend({
   template: Fs.readFileSync(Editor.url('packages://ccc-png-auto-compress/panel/index.html'), 'utf8'),
 
   ready() {
-    let vue = new window.Vue({
+    const app = new window.Vue({
       el: this.shadowRoot,
 
       data() {
@@ -32,7 +32,7 @@ Editor.Panel.extend({
           if (this.isSaving) return;
           this.isSaving = true;
 
-          let config = {
+          const config = {
             enabled: this.enabled,
 
             minQuality: this.minQuality,
@@ -51,7 +51,7 @@ Editor.Panel.extend({
         readConfig() {
           Editor.Ipc.sendToMain('ccc-png-auto-compress:read-config', (err, config) => {
             if (err || !config) return;
-            for (let key in config) {
+            for (const key in config) {
               this[key] = config[key];
             }
           });
@@ -60,7 +60,8 @@ Editor.Panel.extend({
       }
     });
 
-    vue.readConfig();
+    app.readConfig();
+
   }
 
 });
