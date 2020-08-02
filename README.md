@@ -4,9 +4,11 @@
 
 [Cocos Creator 编辑器插件] 项目构建完成之后自动压缩 PNG 资源
 
+- 压缩引擎：[pngquant 2.12.5](https://pngquant.org/)
+
 如果此项目对你有帮助，请不要忘记 [![star](https://gitee.com/ifaswind/ccc-png-auto-compress/badge/star.svg?theme=dark)](https://gitee.com/ifaswind/ccc-png-auto-compress/stargazers)
 
-- 压缩引擎：[pngquant 2.12.5](https://pngquant.org/)
+如有使用上的问题，可以到 gitee 上提 issue 或者添加我的微信 `im_chenpipi` 并留言。
 
 
 
