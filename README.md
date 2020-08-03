@@ -6,6 +6,10 @@
 
 - 压缩引擎：[pngquant 2.12.5](https://pngquant.org/)
 
+该插件已经上架 Cocos 插件商店，需要的小伙伴可以前往免费下载~
+
+![cocos-store](https://gitee.com/ifaswind/image-storage/raw/master/repositories/ccc-png-auto-compress/cocos-store.png)
+
 如果此项目对你有帮助，请不要忘记 [![star](https://gitee.com/ifaswind/ccc-png-auto-compress/badge/star.svg?theme=dark)](https://gitee.com/ifaswind/ccc-png-auto-compress/stargazers)
 
 如有使用上的问题，可以在 gitee 上提 issue 或者添加我的微信 `im_chenpipi` 并留言。
@@ -15,6 +19,8 @@
 ## 截图
 
 ![screenshot](https://gitee.com/ifaswind/image-storage/raw/master/repositories/ccc-png-auto-compress/screenshot.png)
+
+![screenshot-2](https://gitee.com/ifaswind/image-storage/raw/master/repositories/ccc-png-auto-compress/screenshot-2.png)
 
 
 
