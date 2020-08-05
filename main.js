@@ -2,7 +2,7 @@ const Fs = require('fs');
 const Path = require('path');
 const ChildProcess = require('child_process');
 const Os = require('os');
-const FileUtil = require('./utils/FileUtil');
+const FileUtil = require('./utils/file-util');
 
 const configFileDir = 'local';
 const configFileName = 'ccc-png-auto-compress.json';
@@ -191,11 +191,10 @@ function getConfig() {
  * @param {object} log 日志对象
  */
 function compress(srcPath, compressOptions, queue, log) {
-  FileUtil.map(srcPath, (filePath) => {
+  FileUtil.map(srcPath, (filePath, stats) => {
     if (Path.extname(filePath) === '.png') {
       queue.push(new Promise(res => {
-        const stat = Fs.statSync(filePath);
-        const sizeBefore = stat.size / 1024;
+        const sizeBefore = stats.size / 1024;
         // pngquant $OPTIONS -- "$FILE"
         const command = `"${pngquantPath}" ${compressOptions} -- "${filePath}"`;
         ChildProcess.exec(command, (error, stdout, stderr) => {
