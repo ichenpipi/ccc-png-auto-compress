@@ -7,7 +7,7 @@ const FileUtil = require('./utils/file-util');
 const configFileDir = 'local';
 const configFileName = 'ccc-png-auto-compress.json';
 
-let pngquantPath = '';
+let pngquantPath = null;
 
 module.exports = {
 
@@ -35,8 +35,7 @@ module.exports = {
 
     'read-config'(event) {
       const config = getConfig();
-      if (config) Editor.log('[PAC]', '读取本地配置');
-      else Editor.log('[PAC]', '未找到本地配置文件');
+      config ? Editor.log('[PAC]', '读取本地配置') : Editor.log('[PAC]', '未找到本地配置文件');
       event.reply(null, config);
     },
 
@@ -72,7 +71,7 @@ module.exports = {
     if (config && config.enabled) {
       Editor.log('[PAC]', '准备压缩 PNG 资源');
 
-      // 获取引擎路径
+      // 获取压缩引擎路径
       switch (Os.platform()) {
         case 'darwin': // MacOS
           pngquantPath = Editor.url('packages://ccc-png-auto-compress/pngquant/mac/pngquant');
@@ -95,6 +94,7 @@ module.exports = {
           // Fs.chmodSync(pngquantPath, 0755);
           Fs.chmodSync(pngquantPath, 33261);
         }
+        // 另外一个比较蠢的方案
         // let command = `chmod a+x ${pngquantPath}`;
         // await new Promise(res => {
         //   ChildProcess.exec(command, (error, stdout, stderr) => {
@@ -124,17 +124,12 @@ module.exports = {
       // 开始压缩
       Editor.log('[PAC]', '开始压缩 PNG 资源，请勿进行其他操作！');
       let tasks = [];
-      // Cocos Creator 2.4 以下
-      const resPath = Path.join(options.dest, 'res');
-      if (Fs.existsSync(resPath)) {
-        Editor.log('[PAC]', '资源路径', resPath);
+      const list = ['res', 'assets', 'subpackages', 'remote'];
+      for (let i = 0; i < list.length; i++) {
+        const resPath = Path.join(options.dest, list[i]);
+        if (!Fs.existsSync(resPath)) continue;
+        Editor.log('[PAC]', '压缩资源路径', resPath);
         compress(resPath, compressOptions, tasks, log);
-      }
-      // Cocos Creator 2.4 以上
-      const assetsPath = Path.join(options.dest, 'assets');
-      if (Fs.existsSync(assetsPath)) {
-        Editor.log('[PAC]', '资源路径', assetsPath);
-        compress(assetsPath, compressOptions, tasks, log);
       }
       await Promise.all(tasks);
 

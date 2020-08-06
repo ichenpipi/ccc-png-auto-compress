@@ -13,6 +13,7 @@ Editor.Panel.extend({
       data() {
         return {
           enabled: false,
+          // configSaveDir: 'local',
 
           minQuality: 40,
           maxQuality: 80,

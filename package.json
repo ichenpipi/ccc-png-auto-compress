@@ -1,6 +1,6 @@
 {
   "name": "ccc-png-auto-compress",
-  "version": "1.0.1.20200802",
+  "version": "1.0.2.20200807",
   "description": "项目构建完成之后自动压缩 PNG 资源",
   "author": "文弱书生陈皮皮",
   "main": "main.js",
@@ -13,7 +13,7 @@
     "main": "panel/index.js",
     "type": "dockable",
     "title": "自动压缩 PNG 资源",
-    "width": 500,
-    "height": 350
+    "width": 430,
+    "height": 295
   }
 }
