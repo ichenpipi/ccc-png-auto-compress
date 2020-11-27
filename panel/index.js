@@ -13,12 +13,14 @@ Editor.Panel.extend({
       data() {
         return {
           enabled: false,
-          // configSaveDir: 'local',
 
           minQuality: 40,
           maxQuality: 80,
           colors: 256,
           speed: 3,
+
+          excludeFolders: '',
+          excludeFiles: '',
 
           isSaving: false,
         }
@@ -40,6 +42,9 @@ Editor.Panel.extend({
             maxQuality: this.maxQuality,
             colors: this.colors,
             speed: this.speed,
+
+            excludeFolders: this.excludeFolders.split(','),
+            excludeFiles: this.excludeFiles.split(','),
           };
           Editor.Ipc.sendToMain('ccc-png-auto-compress:save-config', config, () => {
             this.isSaving = false;
@@ -53,7 +58,11 @@ Editor.Panel.extend({
           Editor.Ipc.sendToMain('ccc-png-auto-compress:read-config', (err, config) => {
             if (err || !config) return;
             for (const key in config) {
-              this[key] = config[key];
+              if (key === 'excludeFolders' || key === 'excludeFiles') {
+                this[key] = config[key] ? config[key].join(',') : '';
+              } else {
+                this[key] = config[key];
+              }
             }
           });
         }

@@ -16,6 +16,15 @@
             <!-- <ui-prop slide name="速度" type="number" v-value="speed" min="1" max="10" step="1" precision="0"
                 tooltip="· 速度 / 质量的权重，默认值为 3。10 档的质量降低了 5％，但压缩速度比3 档快 8 倍。">
             </ui-prop> -->
+            <hr />
+            <ui-prop name="需要排除的文件夹" style='height: 50;' tooltip="· 相对于 assets/ 的路径&#10;* 多个值之间用 ',' 隔开">
+                <ui-text-area class="flex-1" type="string" v-value="excludeFolders">
+                </ui-text-area>
+            </ui-prop>
+            <ui-prop name="需要排除的文件" style='height: 50;' tooltip="· 相对于 assets/ 的路径&#10;* 多个值之间用 ',' 隔开">
+                <ui-text-area class="flex-1" type="string" v-value="excludeFiles">
+                </ui-text-area>
+            </ui-prop>
         </div>
         <hr />
         <ui-button class="button blue big" v-disabled="isSaving" @click="saveConfig()">保存</ui-button>

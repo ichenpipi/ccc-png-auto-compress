@@ -3,11 +3,18 @@ const Path = require('path');
 const ChildProcess = require('child_process');
 const Os = require('os');
 const FileUtil = require('./utils/file-util');
+const ConfigManager = require('./config-manager');
 
-const configFileDir = 'local';
-const configFileName = 'ccc-png-auto-compress.json';
-
+/** 压缩引擎绝对路径 */
 let pngquantPath = null;
+/** 压缩任务队列 */
+let compressTasks = null;
+/** 日志 */
+let logger = null;
+/** 需要排除的文件夹 */
+let excludeFolders = null;
+/** 需要排除的文件 */
+let excludeFiles = null;
 
 module.exports = {
 
@@ -28,13 +35,13 @@ module.exports = {
     },
 
     'save-config'(event, config) {
-      const configFilePath = saveConfig(config);
+      const configFilePath = ConfigManager.save(config);
       Editor.log('[PAC]', '保存配置', configFilePath);
       event.reply(null, true);
     },
 
     'read-config'(event) {
-      const config = getConfig();
+      const config = ConfigManager.read();
       config ? Editor.log('[PAC]', '读取本地配置') : Editor.log('[PAC]', '未找到本地配置文件');
       event.reply(null, config);
     },
@@ -47,7 +54,7 @@ module.exports = {
   * @param {Function} callback 
   */
   onBuildStart(options, callback) {
-    const config = getConfig();
+    const config = ConfigManager.read();
     if (config && config.enabled) {
       Editor.log('[PAC]', '将在构建完成后自动压缩 PNG 资源');
 
@@ -67,7 +74,7 @@ module.exports = {
    * @param {Function} callback 
    */
   async onBuildFinished(options, callback) {
-    const config = getConfig();
+    const config = ConfigManager.read();
     if (config && config.enabled) {
       Editor.log('[PAC]', '准备压缩 PNG 资源');
 
@@ -113,69 +120,41 @@ module.exports = {
       const colorsParam = config.colors;
       const compressOptions = `${qualityParam} ${speedParam} ${skipParam} ${outputParam} ${writeParam} ${colorsParam}`;
 
-      // 压缩日志
-      let log = {
+      // 重置日志
+      logger = {
         succeedCount: 0,
         failedCount: 0,
         successInfo: '',
         failedInfo: '',
       };
 
+      // 需要排除的文件夹
+      excludeFolders = config.excludeFolders || [];
+      // 需要排除的文件
+      excludeFiles = config.excludeFiles || [];
+
       // 开始压缩
       Editor.log('[PAC]', '开始压缩 PNG 资源，请勿进行其他操作！');
-      let tasks = [];
+      // 初始化队列
+      compressTasks = [];
       const list = ['res', 'assets', 'subpackages', 'remote'];
       for (let i = 0; i < list.length; i++) {
         const resPath = Path.join(options.dest, list[i]);
         if (!Fs.existsSync(resPath)) continue;
         Editor.log('[PAC]', '压缩资源路径', resPath);
-        compress(resPath, compressOptions, tasks, log);
+        compress(resPath, compressOptions);
       }
-      await Promise.all(tasks);
-
-      // 压缩完成
-      Editor.log('[PAC]', `压缩完成（${log.succeedCount} 张成功 | ${log.failedCount} 张失败）`);
-      const header = `\n # ${'Result'.padEnd(13, ' ')} | ${'Name / Path'.padEnd(50, ' ')} | ${'Size Before'.padEnd(13, ' ')} ->   ${'Size After'.padEnd(13, ' ')} | ${'Saved Size'.padEnd(13, ' ')} | ${'Compressibility'.padEnd(20, ' ')}`;
-      Editor.log('[PAC]', '压缩日志 >>>' + header + log.successInfo + log.failedInfo);
+      // 开始压缩并等待压缩完成
+      await Promise.all(compressTasks);
+      // 清空队列
+      compressTasks = null;
+      // 打印压缩结果
+      printResults();
     }
 
     callback();
   }
 
-}
-
-/**
- * 保存配置
- * @param {object} config 
- */
-function saveConfig(config) {
-  // 查找目录
-  const projectPath = Editor.Project.path || Editor.projectPath;
-  const configDirPath = Path.join(projectPath, configFileDir);
-  if (!Fs.existsSync(configDirPath)) Fs.mkdirSync(configDirPath);
-  const configFilePath = Path.join(projectPath, configFileDir, configFileName);
-  // 读取本地配置
-  let object = {};
-  if (Fs.existsSync(configFilePath)) {
-    object = JSON.parse(Fs.readFileSync(configFilePath, 'utf8'));
-  }
-  // 写入配置
-  for (const key in config) { object[key] = config[key]; }
-  Fs.writeFileSync(configFilePath, JSON.stringify(object, null, 2));
-  return configFilePath;
-}
-
-/**
- * 读取配置
- */
-function getConfig() {
-  const projectPath = Editor.Project.path || Editor.projectPath;
-  const configFilePath = Path.join(projectPath, configFileDir, configFileName);
-  let config = null;
-  if (Fs.existsSync(configFilePath)) {
-    config = JSON.parse(Fs.readFileSync(configFilePath, 'utf8'));
-  }
-  return config;
 }
 
 /**
@@ -185,44 +164,88 @@ function getConfig() {
  * @param {Promise[]} queue 压缩任务队列
  * @param {object} log 日志对象
  */
-function compress(srcPath, compressOptions, queue, log) {
+function compress(srcPath, compressOptions, queue) {
   FileUtil.map(srcPath, (filePath, stats) => {
-    if (Path.extname(filePath) === '.png') {
-      queue.push(new Promise(res => {
-        const sizeBefore = stats.size / 1024;
-        // pngquant $OPTIONS -- "$FILE"
-        const command = `"${pngquantPath}" ${compressOptions} -- "${filePath}"`;
-        ChildProcess.exec(command, (error, stdout, stderr) => {
-          if (!error) {
-            // 成功
-            log.succeedCount++;
-            const fileName = Path.basename(filePath);
-            const sizeAfter = Fs.statSync(filePath).size / 1024;
-            const savedSize = sizeBefore - sizeAfter;
-            const savedRatio = savedSize / sizeBefore * 100;
-            log.successInfo += `\n + ${'Successful'.padEnd(13, ' ')} | ${fileName.padEnd(50, ' ')} | ${(sizeBefore.toFixed(2) + ' KB').padEnd(13, ' ')} ->   ${(sizeAfter.toFixed(2) + ' KB').padEnd(13, ' ')} | ${(savedSize.toFixed(2) + ' KB').padEnd(13, ' ')} | ${(savedRatio.toFixed(2) + '%').padEnd(20, ' ')}`;
-          } else {
-            // 失败
-            log.failedCount++;
-            log.failedInfo += `\n - ${'Failed'.padEnd(13, ' ')} | ${filePath.replace(Editor.Project.path || Editor.projectPath, '')}`;
-            switch (error.code) {
-              case 98:
-                log.failedInfo += `\n ${''.padEnd(10, ' ')} - 失败原因：压缩后体积增大（已经不能再压缩了）`;
-                break;
-              case 99:
-                log.failedInfo += `\n ${''.padEnd(10, ' ')} - 失败原因：压缩后质量低于已配置最低质量`;
-                break;
-              case 127:
-                log.failedInfo += `\n ${''.padEnd(10, ' ')} - 失败原因：压缩引擎没有执行权限`;
-                break;
-              default:
-                log.failedInfo += `\n ${''.padEnd(10, ' ')} - 失败原因：code ${error.code}`;
-                break;
-            }
-          }
-          res();
-        });
-      }));
+    // 排除内置资源
+    if (filePath.includes('assets\\internal\\')) return;
+    // 排除非 png 资源
+    if (Path.extname(filePath) !== '.png') return;
+    // 排除指定文件夹和文件
+    const assetPath = getAssetPath(filePath);
+    for (let i = 0; i < excludeFolders.length; i++) {
+      if (assetPath.startsWith(excludeFolders[i])) return;
     }
+    for (let i = 0; i < excludeFiles.length; i++) {
+      if (assetPath.startsWith(excludeFiles[i])) return;
+    }
+    // 加入压缩队列
+    compressTasks.push(new Promise(res => {
+      const sizeBefore = stats.size / 1024;
+      // pngquant $OPTIONS -- "$FILE"
+      const command = `"${pngquantPath}" ${compressOptions} -- "${filePath}"`;
+      ChildProcess.exec(command, (error, stdout, stderr) => {
+        recordResult(error, sizeBefore, filePath);
+        res();
+      });
+    }));
   });
+}
+
+/**
+ * 获取资源源路径
+ * @param {string} filePath 
+ * @return {string} 
+ */
+function getAssetPath(filePath) {
+  const basename = Path.basename(filePath);
+  const uuid = basename.slice(0, basename.indexOf('.'));
+  const abPath = Editor.assetdb.uuidToFspath(uuid);
+  return abPath.slice(abPath.indexOf('assets\\') + 7);
+}
+
+/**
+ * 记录结果
+ * @param {any} error 错误
+ * @param {number} sizeBefore 压缩前尺寸
+ * @param {string} filePath 文件路径
+ */
+function recordResult(error, sizeBefore, filePath) {
+  if (!error) {
+    // 成功
+    logger.succeedCount++;
+    const fileName = Path.basename(filePath);
+    const sizeAfter = Fs.statSync(filePath).size / 1024;
+    const savedSize = sizeBefore - sizeAfter;
+    const savedRatio = savedSize / sizeBefore * 100;
+    logger.successInfo += `\n + ${'Successful'.padEnd(13, ' ')} | ${fileName.padEnd(50, ' ')} | ${(sizeBefore.toFixed(2) + ' KB').padEnd(13, ' ')} ->   ${(sizeAfter.toFixed(2) + ' KB').padEnd(13, ' ')} | ${(savedSize.toFixed(2) + ' KB').padEnd(13, ' ')} | ${(savedRatio.toFixed(2) + '%').padEnd(20, ' ')}`;
+  } else {
+    // 失败
+    logger.failedCount++;
+    logger.failedInfo += `\n - ${'Failed'.padEnd(13, ' ')} | ${filePath.replace(Editor.Project.path || Editor.projectPath, '')}`;
+    switch (error.code) {
+      case 98:
+        logger.failedInfo += `\n ${''.padEnd(10, ' ')} - 失败原因：压缩后体积增大（已经不能再压缩了）`;
+        break;
+      case 99:
+        logger.failedInfo += `\n ${''.padEnd(10, ' ')} - 失败原因：压缩后质量低于已配置最低质量`;
+        break;
+      case 127:
+        logger.failedInfo += `\n ${''.padEnd(10, ' ')} - 失败原因：压缩引擎没有执行权限`;
+        break;
+      default:
+        logger.failedInfo += `\n ${''.padEnd(10, ' ')} - 失败原因：code ${error.code}`;
+        break;
+    }
+  }
+}
+
+/**
+ * 打印结果
+ */
+function printResults() {
+  Editor.log('[PAC]', `压缩完成（${logger.succeedCount} 张成功 | ${logger.failedCount} 张失败）`);
+  const header = `\n # ${'Result'.padEnd(13, ' ')} | ${'Name / Path'.padEnd(50, ' ')} | ${'Size Before'.padEnd(13, ' ')} ->   ${'Size After'.padEnd(13, ' ')} | ${'Saved Size'.padEnd(13, ' ')} | ${'Compressibility'.padEnd(20, ' ')}`;
+  Editor.log('[PAC]', '压缩日志 >>>' + header + logger.successInfo + logger.failedInfo);
+  // 清空
+  logger = null;
 }
