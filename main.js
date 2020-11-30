@@ -35,13 +35,13 @@ module.exports = {
     },
 
     'save-config'(event, config) {
-      const configFilePath = ConfigManager.save(config);
-      Editor.log('[PAC]', '保存配置', configFilePath);
+      const configFilePath = ConfigManager.set(config);
+      Editor.log('[PAC]', '配置已保存', configFilePath);
       event.reply(null, true);
     },
 
     'read-config'(event) {
-      const config = ConfigManager.read();
+      const config = ConfigManager.get();
       config ? Editor.log('[PAC]', '读取本地配置') : Editor.log('[PAC]', '未找到本地配置文件');
       event.reply(null, config);
     },
@@ -54,7 +54,7 @@ module.exports = {
   * @param {Function} callback 
   */
   onBuildStart(options, callback) {
-    const config = ConfigManager.read();
+    const config = ConfigManager.get();
     if (config && config.enabled) {
       Editor.log('[PAC]', '将在构建完成后自动压缩 PNG 资源');
 
@@ -74,9 +74,9 @@ module.exports = {
    * @param {Function} callback 
    */
   async onBuildFinished(options, callback) {
-    const config = ConfigManager.read();
+    const config = ConfigManager.get();
     if (config && config.enabled) {
-      Editor.log('[PAC]', '准备压缩 PNG 资源');
+      Editor.log('[PAC]', '准备压缩 PNG 资源...');
 
       // 获取压缩引擎路径
       switch (Os.platform()) {
@@ -91,7 +91,6 @@ module.exports = {
           callback();
           return;
       }
-      // Editor.log('[PAC]', '压缩引擎路径', pngquantPath);
 
       // 设置引擎文件执行权限（仅 MacOS）
       if (Os.platform() === 'darwin') {
@@ -117,8 +116,9 @@ module.exports = {
       const skipParam = '--skip-if-larger';
       const outputParam = '--ext=.png';
       const writeParam = '--force';
-      const colorsParam = config.colors;
-      const compressOptions = `${qualityParam} ${speedParam} ${skipParam} ${outputParam} ${writeParam} ${colorsParam}`;
+      // const colorsParam = config.colors;
+      // const compressOptions = `${qualityParam} ${speedParam} ${skipParam} ${outputParam} ${writeParam} ${colorsParam}`;
+      const compressOptions = `${qualityParam} ${speedParam} ${skipParam} ${outputParam} ${writeParam}`;
 
       // 重置日志
       logger = {
@@ -129,14 +129,15 @@ module.exports = {
       };
 
       // 需要排除的文件夹
-      excludeFolders = config.excludeFolders || [];
+      excludeFolders = config.excludeFolders ? config.excludeFolders.map(value => Path.normalize(value)) : [];
       // 需要排除的文件
-      excludeFiles = config.excludeFiles || [];
+      excludeFiles = config.excludeFiles ? config.excludeFiles.map(value => Path.normalize(value)) : [];
 
       // 开始压缩
       Editor.log('[PAC]', '开始压缩 PNG 资源，请勿进行其他操作！');
       // 初始化队列
       compressTasks = [];
+      // 遍历项目资源
       const list = ['res', 'assets', 'subpackages', 'remote'];
       for (let i = 0; i < list.length; i++) {
         const resPath = Path.join(options.dest, list[i]);
@@ -164,20 +165,9 @@ module.exports = {
  * @param {Promise[]} queue 压缩任务队列
  * @param {object} log 日志对象
  */
-function compress(srcPath, compressOptions, queue) {
+function compress(srcPath, compressOptions) {
   FileUtil.map(srcPath, (filePath, stats) => {
-    // 排除内置资源
-    if (filePath.includes('assets\\internal\\')) return;
-    // 排除非 png 资源
-    if (Path.extname(filePath) !== '.png') return;
-    // 排除指定文件夹和文件
-    const assetPath = getAssetPath(filePath);
-    for (let i = 0; i < excludeFolders.length; i++) {
-      if (assetPath.startsWith(excludeFolders[i])) return;
-    }
-    for (let i = 0; i < excludeFiles.length; i++) {
-      if (assetPath.startsWith(excludeFiles[i])) return;
-    }
+    if (!testFilePath(filePath)) return;
     // 加入压缩队列
     compressTasks.push(new Promise(res => {
       const sizeBefore = stats.size / 1024;
@@ -191,6 +181,37 @@ function compress(srcPath, compressOptions, queue) {
   });
 }
 
+/** 内置资源目录 */
+const internalPath = Path.normalize('assets/internal/');
+
+/**
+ * 判断资源是否可以进行压缩
+ * @param {string} path 路径
+ */
+function testFilePath(path) {
+  // 排除非 png 资源和内置资源
+  if (Path.extname(path) !== '.png' ||
+    path.includes(internalPath)) {
+    return false;
+  }
+  // 排除指定文件夹和文件
+  const assetPath = getAssetPath(path);
+  if (!assetPath) {
+    for (let i = 0; i < excludeFolders.length; i++) {
+      if (assetPath.startsWith(excludeFolders[i])) {
+        return false;
+      }
+    }
+    for (let i = 0; i < excludeFiles.length; i++) {
+      if (assetPath.startsWith(excludeFiles[i])) {
+        return false;
+      }
+    }
+  }
+  // 测试通过
+  return true;
+}
+
 /**
  * 获取资源源路径
  * @param {string} filePath 
@@ -200,7 +221,14 @@ function getAssetPath(filePath) {
   const basename = Path.basename(filePath);
   const uuid = basename.slice(0, basename.indexOf('.'));
   const abPath = Editor.assetdb.uuidToFspath(uuid);
-  return abPath.slice(abPath.indexOf('assets\\') + 7);
+  if (!abPath) {
+    // 图集资源
+    // 暂时还没有找到办法处理
+    return null;
+  }
+  // 资源根目录
+  const assetsPath = Path.join((Editor.Project.path || Editor.projectPath), 'assets/');
+  return Path.relative(assetsPath, abPath);
 }
 
 /**

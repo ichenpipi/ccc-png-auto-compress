@@ -10,7 +10,7 @@ const configFileName = 'ccc-png-auto-compress.json';
 const ConfigManager = {
 
     /** 默认配置 */
-    default: {
+    defaultConfig: {
         enabled: false,
 
         minQuality: 40,
@@ -25,21 +25,26 @@ const ConfigManager = {
     /**
      * 保存配置
      * @param {object} config 配置
+     * @returns {string} 配置文件路径
      */
-    save(config) {
+    set(config) {
         // 查找目录
         const projectPath = Editor.Project.path || Editor.projectPath;
         const configDirPath = Path.join(projectPath, configFileDir);
         if (!Fs.existsSync(configDirPath)) Fs.mkdirSync(configDirPath);
         const configFilePath = Path.join(projectPath, configFileDir, configFileName);
         // 读取本地配置
-        let object = {};
+        let object = Object.create(null);
         if (Fs.existsSync(configFilePath)) {
             object = JSON.parse(Fs.readFileSync(configFilePath, 'utf8'));
         }
         // 写入配置
         for (const key in config) {
-            object[key] = Array.isArray(config[key]) ? config[key].filter(value => value !== '') : config[key];
+            let value = config[key];
+            if (Array.isArray(value)) {
+                value = value.filter(_value => _value !== '');
+            }
+            object[key] = value;
         }
         Fs.writeFileSync(configFilePath, JSON.stringify(object, null, 2));
         return configFilePath;
@@ -47,15 +52,16 @@ const ConfigManager = {
 
     /**
      * 读取配置
+     * @returns {object} 配置
      */
-    read() {
+    get() {
         const projectPath = Editor.Project.path || Editor.projectPath;
         const configFilePath = Path.join(projectPath, configFileDir, configFileName);
         let config = null;
         if (Fs.existsSync(configFilePath)) {
             config = JSON.parse(Fs.readFileSync(configFilePath, 'utf8'));
         } else {
-            config = { ...this.default };
+            config = { ...this.defaultConfig };
         }
         return config;
     }

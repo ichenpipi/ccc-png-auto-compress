@@ -22,7 +22,7 @@ Editor.Panel.extend({
           excludeFolders: '',
           excludeFiles: '',
 
-          isSaving: false,
+          isProcessing: false,
         }
       },
 
@@ -32,22 +32,25 @@ Editor.Panel.extend({
          * 保存配置
          */
         saveConfig() {
-          if (this.isSaving) return;
-          this.isSaving = true;
+          if (this.isProcessing) return;
+          this.isProcessing = true;
+
+          const excludeFolders = this.excludeFolders.split(',').map(value => value.trim());
+          const excludeFiles = this.excludeFiles.split(',').map(value => value.trim());
 
           const config = {
+            excludeFolders,
+            excludeFiles,
+
             enabled: this.enabled,
 
             minQuality: this.minQuality,
             maxQuality: this.maxQuality,
             colors: this.colors,
             speed: this.speed,
-
-            excludeFolders: this.excludeFolders.split(','),
-            excludeFiles: this.excludeFiles.split(','),
           };
           Editor.Ipc.sendToMain('ccc-png-auto-compress:save-config', config, () => {
-            this.isSaving = false;
+            this.isProcessing = false;
           });
         },
 
@@ -58,8 +61,8 @@ Editor.Panel.extend({
           Editor.Ipc.sendToMain('ccc-png-auto-compress:read-config', (err, config) => {
             if (err || !config) return;
             for (const key in config) {
-              if (key === 'excludeFolders' || key === 'excludeFiles') {
-                this[key] = config[key] ? config[key].join(',') : '';
+              if (Array.isArray(config[key])) {
+                this[key] = config[key].join(',').replace(/,/g, ',\n');
               } else {
                 this[key] = config[key];
               }
