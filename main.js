@@ -196,7 +196,7 @@ function testFilePath(path) {
   }
   // 排除指定文件夹和文件
   const assetPath = getAssetPath(path);
-  if (!assetPath) {
+  if (assetPath) {
     for (let i = 0; i < excludeFolders.length; i++) {
       if (assetPath.startsWith(excludeFolders[i])) {
         return false;
