@@ -18,18 +18,25 @@ const PACKAGE_NAME = 'ccc-png-auto-compress';
 /** 扩展名 */
 const EXTENSION_NAME = translate('name');
 
-/** 压缩引擎绝对路径 */
-let pngquantPath = null;
-/** 压缩任务队列 */
-let compressTasks = null;
-/** 日志 */
-let logger = null;
-/** 需要排除的文件夹 */
-let excludeFolders = null;
-/** 需要排除的文件 */
-let excludeFiles = null;
+/** 内置资源目录 */
+const internalPath = Path.normalize('assets/internal/');
 
 module.exports = {
+
+  /** 压缩引擎绝对路径 */
+  pngquantPath: null,
+
+  /** 压缩任务队列 */
+  compressTasks: null,
+
+  /** 日志 */
+  logger: null,
+
+  /** 需要排除的文件夹 */
+  excludeFolders: null,
+
+  /** 需要排除的文件 */
+  excludeFiles: null,
 
   /**
    * 扩展消息
@@ -85,7 +92,7 @@ module.exports = {
   },
 
   /**
-  * 
+  * 构建开始回调
   * @param {BuildOptions} options 
   * @param {Function} callback 
   */
@@ -93,56 +100,50 @@ module.exports = {
     const config = ConfigManager.read();
     if (config && config.enabled) {
       Editor.log(`[${EXTENSION_NAME}]`, translate('willCompress'));
-      // Editor.log('[PAC]', '将在构建完成后自动压缩 PNG 资源');
-
       // 取消编辑器资源选中
       Editor.Selection.clear('asset');
-      // const assets = Editor.Selection.curSelection('asset');
-      // for (let i = 0; i < assets.length; i++) {
-      //   Editor.Selection.unselect('asset', assets[i]);
-      // }
     }
     // Done
     callback();
   },
 
   /**
-   * 
+   * 构建完成回调
    * @param {BuildOptions} options 
    * @param {Function} callback 
    */
   async onBuildFinished(options, callback) {
     const config = ConfigManager.read();
     if (config && config.enabled) {
-      Editor.log('[PAC]', '准备压缩 PNG 资源...');
+      Editor.log(`[${EXTENSION_NAME}]`, translate('prepareCompress'));
 
       // 获取压缩引擎路径
-      switch (Os.platform()) {
+      const platform = Os.platform();
+      switch (platform) {
         case 'darwin':
-          // MacOS
-          pngquantPath = Editor.url('packages://ccc-png-auto-compress/pngquant/macos/pngquant');
+          // macOS
+          this.pngquantPath = Editor.url('packages://ccc-png-auto-compress/pngquant/macos/pngquant');
           break;
         case 'win32':
           // Windows
-          pngquantPath = Editor.url('packages://ccc-png-auto-compress/pngquant/windows/pngquant');
+          this.pngquantPath = Editor.url('packages://ccc-png-auto-compress/pngquant/windows/pngquant');
           break;
         default:
-          Editor.log('[PAC]', '压缩引擎不支持当前系统平台！');
           // Done
+          Editor.log(`[${EXTENSION_NAME}]`, translate('notSupport'), platform);
           callback();
           return;
       }
 
-      // 设置引擎文件执行权限（仅 MacOS）
-      if (Os.platform() === 'darwin') {
-        if (Fs.statSync(pngquantPath).mode != 33261) {
+      // 设置引擎文件执行权限（仅 macOS）
+      if (platform === 'darwin') {
+        if (Fs.statSync(this.pngquantPath).mode != 33261) {
           // 默认为 33188
-          Editor.log('[PAC]', '设置引擎文件执行权限');
           // Fs.chmodSync(pngquantPath, 0755);
-          Fs.chmodSync(pngquantPath, 33261);
+          Fs.chmodSync(this.pngquantPath, 33261);
         }
         // 另外一个比较蠢的方案
-        // let command = `chmod a+x ${pngquantPath}`;
+        // const command = `chmod a+x ${this.pngquantPath}`;
         // await new Promise(res => {
         //   ChildProcess.exec(command, (error, stdout, stderr) => {
         //     if (error) Editor.log('[PAC]', '设置引擎文件执行权限失败！');
@@ -158,7 +159,7 @@ module.exports = {
         outputParam = '--ext=.png',
         writeParam = '--force',
         // colorsParam = config.colors,
-        // compressOptions = `${qualityParam} ${speedParam} ${skipParam} ${outputParam} ${writeParam} ${colorsParam}`,
+        // compressOptions = `${qualityParam} ${speedParam} ${skipParam} ${outputParam} ${writeParam} ${colorsParam}`;
         compressOptions = `${qualityParam} ${speedParam} ${skipParam} ${outputParam} ${writeParam}`;
 
       // 重置日志
@@ -170,32 +171,110 @@ module.exports = {
       };
 
       // 需要排除的文件夹
-      excludeFolders = config.excludeFolders ? config.excludeFolders.map(value => Path.normalize(value)) : [];
+      this.excludeFolders = config.excludeFolders ? config.excludeFolders.map(value => Path.normalize(value)) : [];
       // 需要排除的文件
-      excludeFiles = config.excludeFiles ? config.excludeFiles.map(value => Path.normalize(value)) : [];
+      this.excludeFiles = config.excludeFiles ? config.excludeFiles.map(value => Path.normalize(value)) : [];
 
       // 开始压缩
-      Editor.log('[PAC]', '开始压缩 PNG 资源，请勿进行其他操作！');
+      Editor.log(`[${EXTENSION_NAME}]`, translate('startCompress'));
       // 初始化队列
-      compressTasks = [];
+      this.compressTasks = [];
       // 遍历项目资源
-      const list = ['res', 'assets', 'subpackages', 'remote'];
+      const dest = options.dest,
+        list = ['res', 'assets', 'subpackages', 'remote'];
       for (let i = 0; i < list.length; i++) {
-        const resPath = Path.join(options.dest, list[i]);
-        if (!Fs.existsSync(resPath)) continue;
-        Editor.log('[PAC]', '压缩资源路径', resPath);
-        compress(resPath, compressOptions);
+        const dir = Path.join(dest, list[i]);
+        if (!Fs.existsSync(dir)) {
+          continue;
+        }
+        Editor.log('[PAC]', '压缩资源路径', dir);
+        this.compress(dir, compressOptions);
       }
       // 开始压缩并等待压缩完成
       await Promise.all(compressTasks);
       // 清空队列
-      compressTasks = null;
+      this.compressTasks = null;
       // 打印压缩结果
       printResults();
     }
     // Done
     callback();
-  }
+  },
+
+  /**
+   * 压缩
+   * @param {string} srcPath 文件路径
+   * @param {string} compressOptions 文件路径
+   * @param {Promise[]} queue 压缩任务队列
+   * @param {object} log 日志对象
+   */
+  compress(srcPath, compressOptions) {
+    const compressTasks = this.compressTasks,
+      pngquantPath = this.pngquantPath,
+      filter = this.filter;
+    const handler = (filePath, stats) => {
+      if (!filter(filePath)) return;
+      // 加入压缩队列
+      compressTasks.push(new Promise(res => {
+        const sizeBefore = stats.size / 1024;
+        // pngquant $OPTIONS -- "$FILE"
+        const command = `"${pngquantPath}" ${compressOptions} -- "${filePath}"`;
+        ChildProcess.exec(command, (error, stdout, stderr) => {
+          recordResult(error, sizeBefore, filePath);
+          res();
+        });
+      }));
+    };
+    FileUtil.map(srcPath, handler);
+  },
+
+  /**
+   * 判断资源是否可以进行压缩
+   * @param {string} path 路径
+   */
+  filter(path) {
+    // 排除非 png 资源和内置资源
+    if (Path.extname(path) !== '.png' || path.includes(internalPath)) {
+      return false;
+    }
+    // 排除指定文件夹和文件
+    const assetPath = this.getAssetPath(path);
+    if (assetPath) {
+      const excludeFolders = this.excludeFolders,
+        excludeFiles = this.excludeFiles;
+      for (let i = 0; i < excludeFolders.length; i++) {
+        if (assetPath.startsWith(excludeFolders[i])) {
+          return false;
+        }
+      }
+      for (let i = 0; i < excludeFiles.length; i++) {
+        if (assetPath.startsWith(excludeFiles[i])) {
+          return false;
+        }
+      }
+    }
+    // 测试通过
+    return true;
+  },
+
+  /**
+   * 获取资源源路径
+   * @param {string} filePath 
+   * @return {string} 
+   */
+  getAssetPath(filePath) {
+    const basename = Path.basename(filePath),
+      uuid = basename.slice(0, basename.indexOf('.')),
+      abPath = Editor.assetdb.uuidToFspath(uuid);
+    if (!abPath) {
+      // 图集资源
+      // 暂时还没有找到办法处理
+      return null;
+    }
+    // 资源根目录
+    const assetsPath = Path.join((Editor.Project.path || Editor.projectPath), 'assets/');
+    return Path.relative(assetsPath, abPath);
+  },
 
 }
 
@@ -208,7 +287,7 @@ module.exports = {
  */
 function compress(srcPath, compressOptions) {
   FileUtil.map(srcPath, (filePath, stats) => {
-    if (!testFilePath(filePath)) return;
+    if (!filter(filePath)) return;
     // 加入压缩队列
     compressTasks.push(new Promise(res => {
       const sizeBefore = stats.size / 1024;
@@ -222,14 +301,11 @@ function compress(srcPath, compressOptions) {
   });
 }
 
-/** 内置资源目录 */
-const internalPath = Path.normalize('assets/internal/');
-
 /**
  * 判断资源是否可以进行压缩
  * @param {string} path 路径
  */
-function testFilePath(path) {
+function filter(path) {
   // 排除非 png 资源和内置资源
   if (Path.extname(path) !== '.png' ||
     path.includes(internalPath)) {
