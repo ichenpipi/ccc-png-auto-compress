@@ -2,8 +2,21 @@ const Fs = require('fs');
 const Path = require('path');
 const ChildProcess = require('child_process');
 const Os = require('os');
-const FileUtil = require('./utils/file-util');
 const ConfigManager = require('./config-manager');
+const FileUtil = require('./utils/file-util');
+
+/**
+ * i18n
+ * @param {string} key
+ * @returns {string}
+ */
+const translate = (key) => Editor.T(`${PACKAGE_NAME}.${key}`);
+
+/** 包名 */
+const PACKAGE_NAME = 'ccc-png-auto-compress';
+
+/** 扩展名 */
+const EXTENSION_NAME = translate('name');
 
 /** 压缩引擎绝对路径 */
 let pngquantPath = null;
@@ -18,34 +31,57 @@ let excludeFiles = null;
 
 module.exports = {
 
-  load() {
-    Editor.Builder.on('build-start', this.onBuildStart);
-    Editor.Builder.on('build-finished', this.onBuildFinished);
-  },
-
-  unload() {
-    Editor.Builder.removeListener('build-start', this.onBuildStart);
-    Editor.Builder.removeListener('build-finished', this.onBuildFinished);
-  },
-
+  /**
+   * 扩展消息
+   * @type {{ [key: string]: Function }}
+   */
   messages: {
 
-    'open-panel'() {
-      Editor.Panel.open('ccc-png-auto-compress');
+    /**
+     * 打开设置面板
+     */
+    'open-setting-panel'() {
+      Editor.Panel.open(`${PACKAGE_NAME}.setting`);
     },
 
-    'save-config'(event, config) {
-      const configFilePath = ConfigManager.set(config);
-      Editor.log('[PAC]', '配置已保存', configFilePath);
-      event.reply(null, true);
-    },
-
+    /**
+     * 读取配置
+     * @param {any} event 
+     */
     'read-config'(event) {
-      const config = ConfigManager.get();
-      config ? Editor.log('[PAC]', '读取本地配置') : Editor.log('[PAC]', '未找到本地配置文件');
+      const config = ConfigManager.read();
       event.reply(null, config);
     },
 
+    /**
+     * 保存配置
+     * @param {any} event 
+     * @param {any} config 
+     */
+    'save-config'(event, config) {
+      const configFilePath = ConfigManager.save(config);
+      Editor.log(`[${EXTENSION_NAME}]`, translate('configSaved'), configFilePath);
+      event.reply(null, true);
+    },
+
+  },
+
+  /**
+   * 生命周期：加载
+   */
+  load() {
+    // 监听事件
+    Editor.Builder.on('build-start', this.onBuildStart.bind(this));
+    Editor.Builder.on('build-finished', this.onBuildFinished.bind(this));
+  },
+
+  /**
+   * 生命周期：加载
+   */
+  unload() {
+    // 取消事件监听
+    Editor.Builder.removeListener('build-start', this.onBuildStart);
+    Editor.Builder.removeListener('build-finished', this.onBuildFinished);
   },
 
   /**
@@ -54,17 +90,19 @@ module.exports = {
   * @param {Function} callback 
   */
   onBuildStart(options, callback) {
-    const config = ConfigManager.get();
+    const config = ConfigManager.read();
     if (config && config.enabled) {
-      Editor.log('[PAC]', '将在构建完成后自动压缩 PNG 资源');
+      Editor.log(`[${EXTENSION_NAME}]`, translate('willCompress'));
+      // Editor.log('[PAC]', '将在构建完成后自动压缩 PNG 资源');
 
       // 取消编辑器资源选中
-      const assets = Editor.Selection.curSelection('asset');
-      for (let i = 0; i < assets.length; i++) {
-        Editor.Selection.unselect('asset', assets[i]);
-      }
+      Editor.Selection.clear('asset');
+      // const assets = Editor.Selection.curSelection('asset');
+      // for (let i = 0; i < assets.length; i++) {
+      //   Editor.Selection.unselect('asset', assets[i]);
+      // }
     }
-
+    // Done
     callback();
   },
 
@@ -74,20 +112,23 @@ module.exports = {
    * @param {Function} callback 
    */
   async onBuildFinished(options, callback) {
-    const config = ConfigManager.get();
+    const config = ConfigManager.read();
     if (config && config.enabled) {
       Editor.log('[PAC]', '准备压缩 PNG 资源...');
 
       // 获取压缩引擎路径
       switch (Os.platform()) {
-        case 'darwin': // MacOS
-          pngquantPath = Editor.url('packages://ccc-png-auto-compress/pngquant/mac/pngquant');
+        case 'darwin':
+          // MacOS
+          pngquantPath = Editor.url('packages://ccc-png-auto-compress/pngquant/macos/pngquant');
           break;
-        case 'win32': // Windows
+        case 'win32':
+          // Windows
           pngquantPath = Editor.url('packages://ccc-png-auto-compress/pngquant/windows/pngquant');
           break;
         default:
           Editor.log('[PAC]', '压缩引擎不支持当前系统平台！');
+          // Done
           callback();
           return;
       }
@@ -111,14 +152,14 @@ module.exports = {
       }
 
       // 设置压缩命令
-      const qualityParam = `--quality ${config.minQuality}-${config.maxQuality}`;
-      const speedParam = `--speed ${config.speed}`;
-      const skipParam = '--skip-if-larger';
-      const outputParam = '--ext=.png';
-      const writeParam = '--force';
-      // const colorsParam = config.colors;
-      // const compressOptions = `${qualityParam} ${speedParam} ${skipParam} ${outputParam} ${writeParam} ${colorsParam}`;
-      const compressOptions = `${qualityParam} ${speedParam} ${skipParam} ${outputParam} ${writeParam}`;
+      const qualityParam = `--quality ${config.minQuality}-${config.maxQuality}`,
+        speedParam = `--speed ${config.speed}`,
+        skipParam = '--skip-if-larger',
+        outputParam = '--ext=.png',
+        writeParam = '--force',
+        // colorsParam = config.colors,
+        // compressOptions = `${qualityParam} ${speedParam} ${skipParam} ${outputParam} ${writeParam} ${colorsParam}`,
+        compressOptions = `${qualityParam} ${speedParam} ${skipParam} ${outputParam} ${writeParam}`;
 
       // 重置日志
       logger = {
@@ -152,7 +193,7 @@ module.exports = {
       // 打印压缩结果
       printResults();
     }
-
+    // Done
     callback();
   }
 

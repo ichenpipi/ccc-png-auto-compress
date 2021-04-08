@@ -3,31 +3,46 @@ const Path = require('path');
 
 /** 配置文件保存目录 */
 const configFileDir = 'local';
+
 /** 配置文件名 */
 const configFileName = 'ccc-png-auto-compress.json';
+
+/** 默认配置 */
+const defaultConfig = {
+    enabled: false,
+    minQuality: 40,
+    maxQuality: 80,
+    colors: 256,
+    speed: 3,
+    excludeFolders: [],
+    excludeFiles: [],
+};
 
 /** 配置管理器 */
 const ConfigManager = {
 
-    /** 默认配置 */
-    defaultConfig: {
-        enabled: false,
-
-        minQuality: 40,
-        maxQuality: 80,
-        colors: 256,
-        speed: 3,
-
-        excludeFolders: [],
-        excludeFiles: [],
+    /**
+     * 读取配置
+     * @returns {object}
+     */
+    read() {
+        const projectPath = Editor.Project.path || Editor.projectPath;
+        const configFilePath = Path.join(projectPath, configFileDir, configFileName);
+        let config = null;
+        if (Fs.existsSync(configFilePath)) {
+            config = JSON.parse(Fs.readFileSync(configFilePath, 'utf8'));
+        } else {
+            config = { ...defaultConfig };
+        }
+        return config;
     },
 
     /**
      * 保存配置
      * @param {object} config 配置
-     * @returns {string} 配置文件路径
+     * @returns {string}
      */
-    set(config) {
+    save(config) {
         // 查找目录
         const projectPath = Editor.Project.path || Editor.projectPath;
         const configDirPath = Path.join(projectPath, configFileDir);
@@ -49,22 +64,6 @@ const ConfigManager = {
         Fs.writeFileSync(configFilePath, JSON.stringify(object, null, 2));
         return configFilePath;
     },
-
-    /**
-     * 读取配置
-     * @returns {object} 配置
-     */
-    get() {
-        const projectPath = Editor.Project.path || Editor.projectPath;
-        const configFilePath = Path.join(projectPath, configFileDir, configFileName);
-        let config = null;
-        if (Fs.existsSync(configFilePath)) {
-            config = JSON.parse(Fs.readFileSync(configFilePath, 'utf8'));
-        } else {
-            config = { ...this.defaultConfig };
-        }
-        return config;
-    }
 
 }
 

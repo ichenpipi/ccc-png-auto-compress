@@ -1,19 +1,39 @@
 {
   "name": "ccc-png-auto-compress",
-  "version": "1.1.0-20201201",
+  "version": "1.2.0.20210410",
   "description": "项目构建完成之后自动压缩 PNG 资源",
-  "author": "陈皮皮",
+  "author": "ifaswind（陈皮皮）",
+  "author-info": {
+    "wechat": "im_chenpipi",
+    "email": "952157129@qq.com",
+    "git-home": "https://gitee.com/ifaswind",
+    "official-account": "公众号「菜鸟小栈」"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://gitee.com/ifaswind/ccc-png-auto-compress"
+  },
   "main": "main.js",
   "main-menu": {
-    "i18n:MAIN_MENU.package.title/自动压缩 PNG 资源": {
-      "message": "ccc-png-auto-compress:open-panel"
+    "i18n:MAIN_MENU.package.title/i18n:ccc-png-auto-compress.name/i18n:ccc-png-auto-compress.setting": {
+      "message": "ccc-png-auto-compress:open-setting-panel"
     }
   },
-  "panel": {
+  "panel.setting": {
     "main": "panel/index.js",
     "type": "fixed-size",
-    "title": "自动压缩 PNG 资源",
+    "title": "i18n:ccc-png-auto-compress.name",
     "width": 500,
     "height": 520
+  },
+  "reload": {
+    "renderer": [
+      "panel.setting/*"
+    ],
+    "ignore": [
+      "CHANGELOG.md",
+      "README.md",
+      "README.en.md"
+    ]
   }
 }

@@ -1,65 +1,75 @@
 /**
- * Cocos Creator 编辑器命名空间
+ * Cocos Creator 编辑器模块
  * @author 陈皮皮（ifaswind）
- * @version 20200803
+ * @version 20210312
  * @see https://gitee.com/ifaswind/eazax-ccc/blob/master/declarations/editor.d.ts
  */
-declare namespace Editor {
+ declare module Editor {
 
     /**
      * Log the normal message and show on the console. The method will send ipc message editor:console-log to all windows.
      * @param args Whatever arguments the message needs
      */
-    export function log(...args: any): void;
+    function log(...args: any): void;
 
     /**
      * Log the normal message and show on the console. The method will send ipc message editor:console-log to all windows.
      * @param args Whatever arguments the message needs
      */
-    export function info(...args: any): void;
+    function info(...args: any): void;
 
     /**
      * Log the warnning message and show on the console, it also shows the call stack start from the function call it. The method will send ipc message editor:console-warn to all windows.
      * @param args Whatever arguments the message needs
      */
-    export function warn(...args: any): void;
+    function warn(...args: any): void;
 
     /**
      * Log the error message and show on the console, it also shows the call stack start from the function call it. The method will sends ipc message editor:console-error to all windows.
      * @param args Whatever arguments the message needs
      */
-    export function error(...args: any): void;
+    function error(...args: any): void;
 
     /**
      * Log the success message and show on the console The method will send ipc message editor:console-success to all windows.
      * @param args Whatever arguments the message needs
      */
-    export function success(...args: any): void;
+    function success(...args: any): void;
 
     /**
      * Require the module by Editor.url. This is good for module exists in package, since the absolute path of package may be variant in different machine.
      * @param url 
      */
-    export function require(url: string): any;
+    function require(url: string): any;
 
     /**
      * Returns the file path (if it is registered in custom protocol) or url (if it is a known public protocol).
      * @param url 
      * @param encode 
      */
-    export function url(url: string, encode?: string): string;
+    function url(url: string, encode?: string): string;
+
+    function T(key: string): string;
 
 }
 
-declare namespace Editor {
-
-    export const versions: { CocosCreator: string, 'editor-framework': string, 'asset-db': string, cocos2d: string };
-
+declare module Editor {
+    readonly let appPath: string;
+    readonly let frameworkPath: string;
+    readonly let importPath: string;
+    readonly let isWin32: boolean;
+    readonly let isDarwin: boolean;
+    readonly let lang: string;
+    readonly let libraryPath: string;
+    readonly let sceneScripts: { [packageName: string]: string };
 }
 
-declare namespace Editor {
+declare module Editor {
 
-    namespace RendererProcess {
+    /**
+     * 渲染进程
+     */
+    module RendererProcess {
 
         /**
         * AssetDB singleton class in renderer process, you can access the instance with `Editor.assetdb`.
@@ -210,7 +220,10 @@ declare namespace Editor {
 
     }
 
-    namespace MainProcess {
+    /**
+     * 主进程
+     */
+    module MainProcess {
 
         /**
          * AssetDB singleton class in main process, you can access the instance with `Editor.assetdb`.
@@ -489,7 +502,7 @@ declare namespace Editor {
              * @param assetTypes The asset type(s).
              * @param cb The callback function.
              */
-            queryAssets(pattern: string, assetTypes: string[], cb?: (err: Error, results: any[]) => void): void;
+            queryAssets(pattern: string, assetTypes: string | string[], cb?: (err: Error, results: any[]) => void): void;
 
             /**
              * queryMetas
@@ -591,22 +604,6 @@ declare namespace Editor {
 
     }
 
-    // interface AssetInfo {
-    //     uuid: string;
-    //     path: string;
-    //     url: string;
-    //     type: string;
-    //     isSubAsset: boolean;
-    // }
-
-    // interface AssetInfo {
-    //     assetType: string;
-    //     id: string;
-    //     isSubAsset?: boolean;
-    //     name: string;
-    //     subAssetTypes: string;
-    // }
-
     interface MetaBase {
         ver: string;
         uuid: string;
@@ -629,7 +626,15 @@ declare namespace Editor {
         'bitmap-font': string[];
     }
 
+    interface App {
+        readonly home: string;
+        readonly name: string;
+        readonly path: string;
+        readonly version: string;
+    }
+
     class Remote {
+        readonly App: App;
         readonly isClosing: boolean;
         readonly lang: string;
         readonly isNode: boolean;
@@ -657,17 +662,19 @@ declare namespace Editor {
         readonly assetdb: MainProcess.AssetDB;
         readonly assetdbInited: boolean;
         readonly sceneList: string[];
+        readonly versions: {
+            'asset-db': string;
+            CocosCreator: string;
+            cocos2d: string;
+            'editor-framework': string;
+        }
     }
 
-    /**
-     * Remote 实例
-     */
-    export const remote: Remote;
+    /** Remote 实例 */
+    const remote: Remote;
 
-    /**
-     * AssetDB 实例
-     */
-    export const assetdb: MainProcess.AssetDB;
+    /** AssetDB 实例 */
+    const assetdb: MainProcess.AssetDB;
 
 }
 
@@ -683,23 +690,11 @@ interface AssetInfo {
     subAssetTypes?: string;
 }
 
-declare module Editor.App {
-
-    export const version: string;
-
-}
-
 declare module Editor.Project {
-
-    /**
-     * Absolute path for current open project.
-     */
-    export const path: string;
-
-    export const name: string;
-
-    export const id: string;
-
+    readonly let id: string;
+    readonly let name: string;
+    /** Absolute path for current open project. */
+    readonly let path: string;
 }
 
 declare module Editor.Builder {
@@ -709,21 +704,21 @@ declare module Editor.Builder {
      * @param eventName The name of the event
      * @param callback The event callback
      */
-    export function on(eventName: string, callback: (options: BuildOptions, cb: Function) => void): void;
+    function on(eventName: string, callback: (options: BuildOptions, cb: Function) => void): void;
 
     /**
      * 
      * @param eventName The name of the event
      * @param callback The event callback
      */
-    export function once(eventName: string, callback: (options: BuildOptions, cb: Function) => void): void;
+    function once(eventName: string, callback: (options: BuildOptions, cb: Function) => void): void;
 
     /**
      * 
      * @param eventName The name of the event
      * @param callback The event callback
      */
-    export function removeListener(eventName: string, callback: Function): void;
+    function removeListener(eventName: string, callback: Function): void;
 
 }
 
@@ -735,7 +730,7 @@ declare module Editor.Scene {
      * @param method 
      * @param cb 
      */
-    export function callSceneScript(packageName: string, method: string, cb: (err: Error, msg: any) => void): void;
+    function callSceneScript(packageName: string, method: string, cb: (err: Error, msg: any) => void): void;
 
 }
 
@@ -746,25 +741,25 @@ declare module Editor.Panel {
      * @param panelID The panel ID
      * @param argv 
      */
-    export function open(panelID: string, argv?: object): void;
+    function open(panelID: string, argv?: object): void;
 
     /**
      * Close a panel via panelID.
      * @param panelID The panel ID
      */
-    export function close(panelID: string): void;
+    function close(panelID: string): void;
 
     /**
      * Find panel frame via panelID.
      * @param panelID The panel ID
      */
-    export function find(panelID: string): void;
+    function find(panelID: string): void;
 
     /**
      * Extends a panel.
      * @param proto 
      */
-    export function extend(proto: object): void;
+    function extend(proto: object): void;
 
 }
 
@@ -777,7 +772,7 @@ declare module Editor.Selection {
      * @param unselectOthers 
      * @param confirm 
      */
-    export function select(type: string, id: string, unselectOthers?: boolean, confirm?: boolean): void;
+    function select(type: string, id: string, unselectOthers?: boolean, confirm?: boolean): void;
 
     /**
      * Unselect item with its id.
@@ -785,38 +780,38 @@ declare module Editor.Selection {
      * @param id 
      * @param confirm 
      */
-    export function unselect(type: string, id: string, confirm?: boolean): void;
+    function unselect(type: string, id: string, confirm?: boolean): void;
 
     /**
      * Hover item with its id. If id is null, it means hover out.
      * @param type 
      * @param id 
      */
-    export function hover(type: string, id: string): string;
+    function hover(type: string, id: string): string;
 
     /**
      * 
      * @param type 
      */
-    export function clear(type: string): void;
+    function clear(type: string): void;
 
     /**
      * 
      * @param type 
      */
-    export function curActivate(type: string): string[];
+    function curActivate(type: string): string[];
 
     /**
      * 
      * @param type 
      */
-    export function curGlobalActivate(type: string): string[];
+    function curGlobalActivate(type: string): string[];
 
     /**
      * 
      * @param type 
      */
-    export function curSelection(type: string): string[];
+    function curSelection(type: string): string[];
 
     /**
      * 
@@ -824,7 +819,7 @@ declare module Editor.Selection {
      * @param mode 'top-level', 'deep' and 'name'
      * @param func 
      */
-    export function filter(items: string[], mode: string, func: Function): string[];
+    function filter(items: string[], mode: string, func: Function): string[];
 
 }
 
@@ -837,7 +832,7 @@ declare module Editor.Ipc {
      * @param callback You can specify a callback function to receive IPC reply at the last or the 2nd last argument.
      * @param timeout You can specify a timeout for the callback at the last argument. If no timeout specified, it will be 5000ms.
      */
-    export function sendToMain(message: string, ...args?: any, callback?: Function, timeout?: number): void;
+    function sendToMain(message: string, ...args?: any, callback?: Function, timeout?: number): void;
 
     /**
      * Send message with ...args to panel defined in renderer process asynchronously. It is possible to add a callback as the last or the 2nd last argument to receive replies from the IPC receiver.
@@ -847,7 +842,7 @@ declare module Editor.Ipc {
      * @param callback You can specify a callback function to receive IPC reply at the last or the 2nd last argument.
      * @param timeout You can specify a timeout for the callback at the last argument. If no timeout specified, it will be 5000ms.
      */
-    export function sendToPanel(panelID: string, message: string, ...args?: any, callback?: Function, timeout?: number): void;
+    function sendToPanel(panelID: string, message: string, ...args?: any, callback?: Function, timeout?: number): void;
 
     /**
      * Send message with ...args to all opened window and to main process asynchronously.
@@ -855,14 +850,14 @@ declare module Editor.Ipc {
      * @param args Whatever arguments the message needs.
      * @param option You can indicate the last argument as an IPC option by Editor.Ipc.option({...}).
      */
-    export function sendToAll(message: string, ...args?: any, option?: object): void;
+    function sendToAll(message: string, ...args?: any, option?: object): void;
 
     /**
      * Send message with ...args to main process synchronized and return a result which is responded from main process.
      * @param message Ipc message.
      * @param args Whatever arguments the message needs.
      */
-    export function sendToMainSync(message: string, ...args?: any): void;
+    function sendToMainSync(message: string, ...args?: any): void;
 
     /**
      * Send message with ...args to main process by package name and the short name of the message.
@@ -870,55 +865,105 @@ declare module Editor.Ipc {
      * @param message Ipc message.
      * @param args Whatever arguments the message needs.
      */
-    export function sendToPackage(pkgName: string, message: string, ...args?: any): void;
+    function sendToPackage(pkgName: string, message: string, ...args?: any): void;
 
 }
 
 declare module Editor.UI {
 
-    export module Setting {
+    module Setting {
 
         /**
          * Control the default step for float point input element. Default is 0.1.
          * @param value 
          */
-        export function stepFloat(value: number): void;
+        function stepFloat(value: number): void;
 
         /**
          * Control the default step for integer input element. Default is 1.
          * @param value 
          */
-        export function stepInt(value: number): void;
+        function stepInt(value: number): void;
 
         /**
          * Control the step when shift key press down. Default is 10.
          * @param value 
          */
-        export function shiftStep(value: number): void;
+        function shiftStep(value: number): void;
 
     }
 
-    export module DragDrop {
+    module DragDrop {
 
-        export function start(e: any, t: any): void;
+        readonly let dragging: boolean;
 
-        export function end(): void;
+        function start(e: any, t: any): void;
 
-        export function updateDropEffect(e: any, t: any);
+        function end(): void;
 
-        export function type(e: any);
+        function updateDropEffect(e: any, t: any);
 
-        export function filterFiles(e: any);
+        function type(e: any);
 
-        export function items(dataTransfer: DataTransfer): AssetInfo[];
+        function filterFiles(e: any);
 
-        export function getDragIcon(e: any);
+        function items(dataTransfer: DataTransfer): AssetInfo[];
 
-        export function options(e: any);
+        function getDragIcon(e: any);
 
-        export function getLength(e: any): number;
+        function options(e: any);
 
-        export const dragging: boolean;
+        function getLength(e: any): number;
+
+    }
+
+}
+
+declare module Editor.GizmosUtils {
+
+    function addMoveHandles(e, n, t);
+
+    function getCenter(e);
+
+    function getCenterWorldPos(n);
+
+    function getCenterWorldPos3D(e);
+
+    function getRecursiveNodes(e, t);
+
+    function getRecursiveWorldBounds3D(e);
+
+    function getWorldBounds3D(n);
+
+    function snapPixel(e);
+
+    function snapPixelWihVec2(e);
+
+}
+
+declare module Editor.Utils {
+
+    /**
+     * Uuid 工具
+     */
+    module UuidUtils {
+
+        /**
+         * 压缩后的 uuid 可以减小保存时的尺寸，但不能做为文件名（因为无法区分大小写并且包含非法字符）。
+         * 默认将 uuid 的后面 27 位压缩成 18 位，前 5 位保留下来，方便调试。
+         * 如果启用 min 则将 uuid 的后面 30 位压缩成 20 位，前 2 位保留不变。
+         * @param uuid 
+         * @param min 
+         */
+        function compressUuid(uuid: string, min?: boolean): string;
+
+        function compressHex(hexString: string, reservedHeadLength?: number): string;
+
+        function decompressUuid(str: string): string;
+
+        function isUuid(str: string): boolean;
+
+        function uuid(): string;
 
     }
 
@@ -979,144 +1024,30 @@ declare interface BuildOptions {
     project: string;
     projectName: string;
     debugBuildWorker: boolean;
-
-    /**
-     * 从 v2.4 开始，options 中不再提供 buildResults，而是提供了一个 bundles 数组。
-     */
-    buildResults: BuildResults;
-
     bundles: bundle[];
 }
 
-declare class BuildResults {
-
-    /**
-     * Returns true if the asset contains in the build.
-     * 指定的 uuid 资源是否包含在构建资源中
-     * @param uuid 需要检测的资源 uuid
-     * @param assertContains 不包含时是否打印报错信息
-     */
-    containsAsset(uuid: string, assertContains: boolean): boolean;
-
-    /**
-     * Returns the uuids of all assets included in the build.
-     * 返回构建资源中包含的所有资源的 uuid
-     */
-    getAssetUuids(): string[];
-
-    /**
-     * Return the uuids of assets which are dependencies of the input, also include all indirect dependencies.
-     * The list returned will not include the input uuid itself.
-     * 获取指定 uuid 资源中的所有依赖资源，返回的列表中不包含自身
-     * @param uuid 指定的 uuid 资源
-     */
-    getDependencies(uuid: string): string[];
-
-    /**
-     * Get type of asset defined in the engine.
-     * You can get the constructor of an asset by using `cc.js.getClassByName(type)`.
-     * 获取指定 uuid 的资源在引擎中定义的资源类型
-     * 同时可以使用 cc.js.getClassByName(type) 进行获取资源的构造函数
-     * @param uuid 指定的 uuid 资源
-     */
-    getAssetType(uuid: string): string;
-
-    /**
-     * Get the path of the specified native asset such as texture. Returns empty string if not found.
-     * 获取指定 uuid 资源（例如纹理）的存放路径（如果找不到，则返回空字符串）
-     * @param uuid 指定的 uuid 资源
-     */
-    getNativeAssetPath(uuid: string): string;
-
-    /**
-     * 获取指定 uuid 资源（例如纹理）的所有存放路径（如果找不到，则返回空数组）
-     * 例如：需要获取纹理多种压缩格式的存放资源路径时，即可使用该函数
-     * @param uuid - 指定的 uuid 资源
-     */
-    getNativeAssetPaths(uuid: string): string[];
-
-}
-
 interface bundle {
-
-    /**
-     * bundle 的根目录
-     */
+    /** bundle 的根目录 */
     root: string;
-
-    /**
-     * bundle 的输出目录
-     */
+    /** bundle 的输出目录 */
     dest: string;
-
-    /**
-     * 脚本的输出目录
-     */
+    /** 脚本的输出目录 */
     scriptDest: string;
-
-    /**
-     * bundle 的名称
-     */
+    /** bundle 的名称 */
     name: string;
-
-    /**
-     * bundle 的优先级
-     */
+    /** bundle 的优先级 */
     priority: number;
-
-    /**
-     * bundle 中包含的场景
-     */
+    /** bundle 中包含的场景 */
     scenes: string[];
-
-    /**
-     * bundle 的压缩类型
-     */
+    /** bundle 的压缩类型 */
     compressionType: 'subpackage' | 'normal' | 'none' | 'merge_all_json' | 'zip';
-
-    /**
-     * bundle 所构建出来的所有资源
-     */
+    /** bundle 所构建出来的所有资源 */
     buildResults: BuildResults;
-
-    /**
-     * bundle 的版本信息，由 config 生成
-     */
+    /** bundle 的版本信息，由 config 生成 */
     version: string;
-
-    /**
-     * bundle 的 config.json 文件
-     */
+    /** bundle 的 config.json 文件 */
     config: any;
-
-    /**
-     * bundle 是否是远程包
-     */
+    /** bundle 是否是远程包 */
     isRemote: boolean;
-
-}
-
-declare module Editor.Utils {
-
-    module UuidUtils {
-
-        /**
-         * 压缩后的 uuid 可以减小保存时的尺寸，但不能做为文件名（因为无法区分大小写并且包含非法字符）。
-         * 默认将 uuid 的后面 27 位压缩成 18 位，前 5 位保留下来，方便调试。
-         * 如果启用 min 则将 uuid 的后面 30 位压缩成 20 位，前 2 位保留不变。
-         * @param uuid 
-         * @param min 
-         */
-        export function compressUuid(uuid: string, min?: boolean): string;
-
-        export function compressHex(hexString: string, reservedHeadLength?: number): string;
-
-        export function decompressUuid(str: string): string;
-
-        export function isUuid(str: string): boolean;
-
-        export function uuid(): string;
-
-    }
-
 }
