@@ -20,7 +20,7 @@
     }
   },
   "panel.setting": {
-    "main": "panel/index.js",
+    "main": "panel.setting/index.js",
     "type": "fixed-size",
     "title": "i18n:ccc-png-auto-compress.name",
     "width": 500,
