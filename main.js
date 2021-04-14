@@ -23,16 +23,28 @@ const internalPath = Path.normalize('assets/internal/');
 
 module.exports = {
 
-  /** 压缩引擎绝对路径 */
+  /**
+   * 压缩引擎绝对路径
+   * @type {string}
+   */
   pngquantPath: null,
 
-  /** 日志 */
+  /**
+   * 日志
+   * @type {{ successCount: number, failedCount: number, successInfo: string, failedInfo: string }}
+   */
   logger: null,
 
-  /** 需要排除的文件夹 */
+  /**
+   * 需要排除的文件夹
+   * @type {string[]}
+   */
   excludeFolders: null,
 
-  /** 需要排除的文件 */
+  /**
+   * 需要排除的文件
+   * @type {string[]}
+   */
   excludeFiles: null,
 
   /**
@@ -122,9 +134,9 @@ module.exports = {
     Editor.log(`[${EXTENSION_NAME}]`, translate('prepareCompress'));
 
     // 获取压缩引擎路径
-    const platform = Os.platform();
-    this.pngquantPath = Path.join(__dirname, enginePathMap[platform]);
-    if (!this.pngquantPath) {
+    const platform = Os.platform(),
+      pngquantPath = this.pngquantPath = Path.join(__dirname, enginePathMap[platform]);
+    if (!pngquantPath) {
       Editor.log(`[${EXTENSION_NAME}]`, translate('notSupport'), platform);
       callback();
       return;
@@ -132,9 +144,9 @@ module.exports = {
 
     // 设置引擎文件的执行权限（仅 macOS）
     if (platform === 'darwin') {
-      if (Fs.statSync(this.pngquantPath).mode != 33261) {
+      if (Fs.statSync(pngquantPath).mode != 33261) {
         // 默认为 33188
-        Fs.chmodSync(this.pngquantPath, 33261);
+        Fs.chmodSync(pngquantPath, 33261);
       }
     }
 
@@ -155,7 +167,7 @@ module.exports = {
 
     // 重置日志
     this.logger = {
-      succeedCount: 0,
+      successCount: 0,
       failedCount: 0,
       successInfo: '',
       failedInfo: ''
@@ -272,7 +284,7 @@ module.exports = {
         sizeAfter = Fs.statSync(filePath).size / 1024,
         savedSize = sizeBefore - sizeAfter,
         savedRatio = savedSize / sizeBefore * 100;
-      log.succeedCount++;
+      log.successCount++;
       log.successInfo += `\n + ${'Successful'.padEnd(13, ' ')} | ${fileName.padEnd(50, ' ')} | ${(sizeBefore.toFixed(2) + ' KB').padEnd(13, ' ')} ->   ${(sizeAfter.toFixed(2) + ' KB').padEnd(13, ' ')} | ${(savedSize.toFixed(2) + ' KB').padEnd(13, ' ')} | ${(savedRatio.toFixed(2) + '%').padEnd(20, ' ')}`;
     } else {
       // 失败
@@ -301,7 +313,7 @@ module.exports = {
   printResults() {
     const log = this.logger,
       header = `\n # ${'Result'.padEnd(13, ' ')} | ${'Name / Path'.padEnd(50, ' ')} | ${'Size Before'.padEnd(13, ' ')} ->   ${'Size After'.padEnd(13, ' ')} | ${'Saved Size'.padEnd(13, ' ')} | ${'Compressibility'.padEnd(20, ' ')}`;
-    Editor.log('[PAC]', `压缩完成（${log.succeedCount} 张成功 | ${log.failedCount} 张失败）`);
+    Editor.log('[PAC]', `压缩完成（${log.successCount} 张成功 | ${log.failedCount} 张失败）`);
     Editor.log('[PAC]', '压缩日志 >>>' + header + log.successInfo + log.failedInfo);
   },
 
