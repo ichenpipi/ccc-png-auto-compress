@@ -16,7 +16,8 @@
   "main": "main.js",
   "main-menu": {
     "i18n:MAIN_MENU.package.title/i18n:ccc-png-auto-compress.name/i18n:ccc-png-auto-compress.setting": {
-      "message": "ccc-png-auto-compress:open-setting-panel"
+      "message": "ccc-png-auto-compress:open-setting-panel",
+      "icon": "/images/setting.png"
     }
   },
   "panel.setting": {
@@ -24,7 +25,7 @@
     "type": "fixed-size",
     "title": "i18n:ccc-png-auto-compress.name",
     "width": 500,
-    "height": 600
+    "height": 610
   },
   "reload": {
     "renderer": [

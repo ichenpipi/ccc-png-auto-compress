@@ -24,7 +24,19 @@ const internalPath = Path.normalize('assets/internal/');
 module.exports = {
 
   /**
-   * 压缩引擎绝对路径
+   * 项目路径
+   * @type {string}
+   */
+  projectPath: null,
+
+  /**
+   * 资源根目录路径
+   * @type {string}
+   */
+  assetsPath: null,
+
+  /**
+   * 压缩引擎路径
    * @type {string}
    */
   pngquantPath: null,
@@ -86,9 +98,12 @@ module.exports = {
    * 生命周期：加载
    */
   load() {
+    // 绑定 this
+    this.onBuildStart = this.onBuildStart.bind(this);
+    this.onBuildFinished = this.onBuildFinished.bind(this);
     // 监听事件
-    Editor.Builder.on('build-start', this.onBuildStart.bind(this));
-    Editor.Builder.on('build-finished', this.onBuildFinished.bind(this));
+    Editor.Builder.on('build-start', this.onBuildStart);
+    Editor.Builder.on('build-finished', this.onBuildFinished);
   },
 
   /**
@@ -130,25 +145,30 @@ module.exports = {
       return;
     }
 
-    // 准备
-    Editor.log(`[${EXTENSION_NAME}]`, translate('prepareCompress'));
+    // 获取项目路径
+    this.projectPath = Editor.Project.path || Editor.projectPath;
+    this.assetsPath = Path.join(this.projectPath, 'assets');
 
     // 获取压缩引擎路径
     const platform = Os.platform(),
       pngquantPath = this.pngquantPath = Path.join(__dirname, enginePathMap[platform]);
+    // 设置引擎文件的执行权限（仅 macOS）
+    if (pngquantPath && platform === 'darwin') {
+      if (Fs.statSync(pngquantPath).mode != 33261) {
+        // 默认为 33188
+        Fs.chmodSync(pngquantPath, 33261);
+      }
+    }
+
+    // 压缩引擎路径
     if (!pngquantPath) {
       Editor.log(`[${EXTENSION_NAME}]`, translate('notSupport'), platform);
       callback();
       return;
     }
 
-    // 设置引擎文件的执行权限（仅 macOS）
-    if (platform === 'darwin') {
-      if (Fs.statSync(pngquantPath).mode != 33261) {
-        // 默认为 33188
-        Fs.chmodSync(pngquantPath, 33261);
-      }
-    }
+    // 准备
+    Editor.log(`[${EXTENSION_NAME}]`, translate('prepareCompress'));
 
     // 组装压缩命令
     const qualityParam = `--quality ${config.minQuality}-${config.maxQuality}`,
@@ -204,20 +224,22 @@ module.exports = {
   async compress(srcPath, options) {
     const pngquantPath = this.pngquantPath,
       tasks = [];
-    const filter = this.filter,
-      handler = (filePath, stats) => {
-        if (!filter(filePath)) return;
-        // 加入压缩队列
-        tasks.push(new Promise(res => {
-          const sizeBefore = stats.size / 1024,
-            command = `"${pngquantPath}" ${options} -- "${filePath}"`;
-          // pngquant $OPTIONS -- "$FILE"
-          exec(command, (error, stdout, stderr) => {
-            this.recordResult(error, sizeBefore, filePath);
-            res();
-          });
-        }));
-      };
+    const handler = (filePath, stats) => {
+      // 过滤文件
+      if (!this.filter(filePath)) {
+        return;
+      }
+      // 加入压缩队列
+      tasks.push(new Promise(res => {
+        const sizeBefore = stats.size / 1024,
+          command = `"${pngquantPath}" ${options} -- "${filePath}"`;
+        // pngquant $OPTIONS -- "$FILE"
+        exec(command, (error, stdout, stderr) => {
+          this.recordResult(error, sizeBefore, filePath);
+          res();
+        });
+      }));
+    };
     FileUtil.map(srcPath, handler);
     await Promise.all(tasks);
   },
@@ -236,12 +258,14 @@ module.exports = {
     if (assetPath) {
       const excludeFolders = this.excludeFolders,
         excludeFiles = this.excludeFiles;
-      for (let i = 0; i < excludeFolders.length; i++) {
+      // 文件夹
+      for (let i = 0, l = excludeFolders.length; i < l; i++) {
         if (assetPath.startsWith(excludeFolders[i])) {
           return false;
         }
       }
-      for (let i = 0; i < excludeFiles.length; i++) {
+      // 文件
+      for (let i = 0, l = excludeFiles.length; i < l; i++) {
         if (assetPath.startsWith(excludeFiles[i])) {
           return false;
         }
@@ -257,17 +281,16 @@ module.exports = {
    * @return {string} 
    */
   getAssetPath(filePath) {
+    // 获取源路径（图像在项目中的实际路径）
     const basename = Path.basename(filePath),
       uuid = basename.slice(0, basename.indexOf('.')),
-      abPath = Editor.assetdb.uuidToFspath(uuid);
-    if (!abPath) {
+      sourcePath = Editor.assetdb.uuidToFspath(uuid);
+    if (!sourcePath) {
       // 图集资源
       // 暂时还没有找到办法处理
       return null;
     }
-    // 资源根目录
-    const assetsPath = Path.join((Editor.Project.path || Editor.projectPath), 'assets/');
-    return Path.relative(assetsPath, abPath);
+    return Path.relative(this.assetsPath, sourcePath);
   },
 
   /**
@@ -289,19 +312,19 @@ module.exports = {
     } else {
       // 失败
       log.failedCount++;
-      log.failedInfo += `\n - ${'Failed'.padEnd(13, ' ')} | ${filePath.replace(Editor.Project.path || Editor.projectPath, '')}`;
+      log.failedInfo += `\n - ${'Failed'.padEnd(13, ' ')} | ${filePath.replace(this.projectPath, '')}`;
       switch (error.code) {
         case 98:
-          log.failedInfo += `\n ${''.padEnd(10, ' ')} - 失败原因：压缩后体积增大（已经不能再压缩了）`;
+          log.failedInfo += `\n ${' '.repeat(10)} - 失败原因：压缩后体积增大（已经不能再压缩了）`;
           break;
         case 99:
-          log.failedInfo += `\n ${''.padEnd(10, ' ')} - 失败原因：压缩后质量低于已配置最低质量`;
+          log.failedInfo += `\n ${' '.repeat(10)} - 失败原因：压缩后质量低于已配置最低质量`;
           break;
         case 127:
-          log.failedInfo += `\n ${''.padEnd(10, ' ')} - 失败原因：压缩引擎没有执行权限`;
+          log.failedInfo += `\n ${' '.repeat(10)} - 失败原因：压缩引擎没有执行权限`;
           break;
         default:
-          log.failedInfo += `\n ${''.padEnd(10, ' ')} - 失败原因：code ${error.code}`;
+          log.failedInfo += `\n ${' '.repeat(10)} - 失败原因：code ${error.code}`;
           break;
       }
     }
