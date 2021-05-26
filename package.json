@@ -1,6 +1,6 @@
 {
   "name": "ccc-png-auto-compress",
-  "version": "1.2.0.20210410",
+  "version": "1.2.0.20210527",
   "description": "项目构建完成之后自动压缩 PNG 资源",
   "author": "ifaswind（陈皮皮）",
   "author-info": {
@@ -29,7 +29,7 @@
   },
   "reload": {
     "renderer": [
-      "panel.setting/*"
+      "panel.setting/**/*"
     ],
     "ignore": [
       "CHANGELOG.md",

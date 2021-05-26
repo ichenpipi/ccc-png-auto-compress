@@ -22,12 +22,12 @@ const defaultConfig = {
 const ConfigManager = {
 
     /**
-     * 读取配置
+     * 获取配置
      * @returns {object}
      */
-    read() {
-        const projectPath = Editor.Project.path || Editor.projectPath;
-        const configFilePath = Path.join(projectPath, configFileDir, configFileName);
+    get() {
+        const projectPath = Editor.Project.path || Editor.projectPath,
+            configFilePath = Path.join(projectPath, configFileDir, configFileName);
         let config = null;
         if (Fs.existsSync(configFilePath)) {
             config = JSON.parse(Fs.readFileSync(configFilePath, 'utf8'));
@@ -42,11 +42,13 @@ const ConfigManager = {
      * @param {object} config 配置
      * @returns {string}
      */
-    save(config) {
+    set(config) {
         // 查找目录
-        const projectPath = Editor.Project.path || Editor.projectPath;
-        const configDirPath = Path.join(projectPath, configFileDir);
-        if (!Fs.existsSync(configDirPath)) Fs.mkdirSync(configDirPath);
+        const projectPath = Editor.Project.path || Editor.projectPath,
+            configDirPath = Path.join(projectPath, configFileDir);
+        if (!Fs.existsSync(configDirPath)) {
+            Fs.mkdirSync(configDirPath);
+        }
         const configFilePath = Path.join(projectPath, configFileDir, configFileName);
         // 读取本地配置
         let object = Object.create(null);

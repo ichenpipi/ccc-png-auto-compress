@@ -1,14 +1,14 @@
 const { readFileSync } = require('fs');
 
+/** 包名 */
+const PACKAGE_NAME = 'ccc-png-auto-compress';
+
 /**
  * i18n
  * @param {string} key
  * @returns {string}
  */
 const translate = (key) => Editor.T(`${PACKAGE_NAME}.${key}`);
-
-/** 包名 */
-const PACKAGE_NAME = 'ccc-png-auto-compress';
 
 /** 扩展名 */
 const EXTENSION_NAME = translate('name');

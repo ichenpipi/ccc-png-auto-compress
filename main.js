@@ -5,15 +5,15 @@ const { exec } = require('child_process');
 const ConfigManager = require('./config-manager');
 const FileUtil = require('./utils/file-util');
 
+/** 包名 */
+const PACKAGE_NAME = require('./package.json').name;
+
 /**
  * i18n
  * @param {string} key
  * @returns {string}
  */
 const translate = (key) => Editor.T(`${PACKAGE_NAME}.${key}`);
-
-/** 包名 */
-const PACKAGE_NAME = 'ccc-png-auto-compress';
 
 /** 扩展名 */
 const EXTENSION_NAME = translate('name');
@@ -77,7 +77,7 @@ module.exports = {
      * @param {any} event 
      */
     'read-config'(event) {
-      const config = ConfigManager.read();
+      const config = ConfigManager.get();
       event.reply(null, config);
     },
 
@@ -87,7 +87,7 @@ module.exports = {
      * @param {any} config 
      */
     'save-config'(event, config) {
-      const configFilePath = ConfigManager.save(config);
+      const configFilePath = ConfigManager.set(config);
       Editor.log(`[${EXTENSION_NAME}]`, translate('configSaved'), configFilePath);
       event.reply(null, true);
     },
@@ -121,7 +121,7 @@ module.exports = {
   * @param {Function} callback 
   */
   onBuildStart(options, callback) {
-    const config = ConfigManager.read();
+    const config = ConfigManager.get();
     if (config && config.enabled) {
       Editor.log(`[${EXTENSION_NAME}]`, translate('willCompress'));
       // 取消编辑器资源选中（解除占用）
@@ -137,7 +137,7 @@ module.exports = {
    * @param {Function} callback 
    */
   async onBuildFinished(options, callback) {
-    const config = ConfigManager.read();
+    const config = ConfigManager.get();
 
     // 未开启直接跳过
     if (!config || !config.enabled) {
