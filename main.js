@@ -3,7 +3,7 @@ const Path = require('path');
 const Os = require('os');
 const { exec } = require('child_process');
 const ConfigManager = require('./config-manager');
-const FileUtil = require('./utils/file-util');
+const FileUtils = require('./utils/file-utils');
 
 /** 包名 */
 const PACKAGE_NAME = require('./package.json').name;
@@ -240,7 +240,7 @@ module.exports = {
         });
       }));
     };
-    FileUtil.map(srcPath, handler);
+    FileUtils.map(srcPath, handler);
     await Promise.all(tasks);
   },
 
