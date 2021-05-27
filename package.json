@@ -25,7 +25,7 @@
     "type": "fixed-size",
     "title": "i18n:ccc-png-auto-compress.name",
     "width": 500,
-    "height": 610
+    "height": 625
   },
   "reload": {
     "renderer": [
