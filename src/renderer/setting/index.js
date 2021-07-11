@@ -10,17 +10,14 @@ const PACKAGE_NAME = 'ccc-png-auto-compress';
  */
 const translate = (key) => Editor.T(`${PACKAGE_NAME}.${key}`);
 
-/** 扩展名 */
-const EXTENSION_NAME = translate('name');
-
 // 注册面板
 Editor.Panel.extend({
 
   /** HTML */
-  template: readFileSync(Editor.url(`packages://${PACKAGE_NAME}/panel.setting/index.html`), 'utf8'),
+  template: readFileSync(Editor.url(`packages://${PACKAGE_NAME}/src/renderer/setting/index.html`), 'utf8'),
 
   /** 样式 */
-  style: readFileSync(Editor.url(`packages://${PACKAGE_NAME}/panel.setting/index.css`), 'utf8'),
+  style: readFileSync(Editor.url(`packages://${PACKAGE_NAME}/src/renderer/setting/index.css`), 'utf8'),
 
   /**
    * 当面板渲染成功后触发

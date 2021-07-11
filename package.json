@@ -1,11 +1,12 @@
 {
   "name": "ccc-png-auto-compress",
-  "version": "1.2.0.20210527",
+  "version": "1.3.0.20210711",
   "description": "项目构建完成之后自动压缩 PNG 资源",
-  "author": "ifaswind（陈皮皮）",
-  "author-info": {
-    "wechat": "im_chenpipi",
+  "author": {
+    "name": "ifaswind (陈皮皮)",
     "email": "952157129@qq.com",
+    "url": "https://chenpipi.cn",
+    "wechat": "im_chenpipi",
     "git-home": "https://gitee.com/ifaswind",
     "official-account": "公众号「菜鸟小栈」"
   },
@@ -13,7 +14,8 @@
     "type": "git",
     "url": "https://gitee.com/ifaswind/ccc-png-auto-compress"
   },
-  "main": "main.js",
+  "license": "MIT",
+  "main": "src/main.js",
   "main-menu": {
     "i18n:MAIN_MENU.package.title/i18n:ccc-png-auto-compress.name/i18n:ccc-png-auto-compress.setting": {
       "message": "ccc-png-auto-compress:open-setting-panel",
@@ -21,7 +23,7 @@
     }
   },
   "panel.setting": {
-    "main": "panel.setting/index.js",
+    "main": "src/renderer/setting/index.js",
     "type": "fixed-size",
     "title": "i18n:ccc-png-auto-compress.name",
     "width": 500,
@@ -29,7 +31,7 @@
   },
   "reload": {
     "renderer": [
-      "panel.setting/**/*"
+      "src/renderer/setting/**/*"
     ],
     "ignore": [
       "CHANGELOG.md",
