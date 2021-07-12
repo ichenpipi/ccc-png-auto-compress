@@ -1,8 +1,9 @@
 const { BrowserWindow } = require('electron');
 const { language, translate } = require('./eazax/editor-util');
+const PackageUtil = require('./eazax/package-util');
 
 /** 包名 */
-const PACKAGE_NAME = require('../package.json').name;
+const PACKAGE_NAME = PackageUtil.name;
 
 /** 扩展名称 */
 const EXTENSION_NAME = translate('name');

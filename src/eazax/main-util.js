@@ -1,12 +1,13 @@
 const { ipcMain } = require('electron');
+const PackageUtil = require('./package-util');
 
 /** 包名 */
-const PACKAGE_NAME = require('../../package.json').name;
+const PACKAGE_NAME = PackageUtil.name;
 
 /**
  * 主进程工具
  * @author ifaswind (陈皮皮)
- * @version 20210703
+ * @version 20210713
  */
 const MainUtil = {
 

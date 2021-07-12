@@ -1,9 +1,7 @@
 const { getUrlParam } = require('../../utils/browser-util');
 const I18n = require('../../eazax/i18n');
 const RendererUtil = require('../../eazax/renderer-util');
-
-/** 包信息 */
-const PACKAGE_JSON = require('../../../package.json');
+const PackageUtil = require('../../eazax/package-util');
 
 /** 语言 */
 const LANG = getUrlParam('lang');
@@ -24,9 +22,9 @@ const App = {
   data() {
     return {
       // 包名
-      packageName: PACKAGE_JSON.name,
+      packageName: PackageUtil.name,
       // 仓库地址
-      repositoryUrl: PACKAGE_JSON.repository.url,
+      repositoryUrl: PackageUtil.repositoryUrl,
       // 配置
       enabled: false,
       excludeFolders: '',
