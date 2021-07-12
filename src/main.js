@@ -5,16 +5,17 @@ const { exec } = require('child_process');
 const ConfigManager = require('./config-manager');
 const PanelManager = require('./panel-manager');
 const { map } = require('./utils/file-util');
-const { print, translate } = require('./eazax/editor-util');
+const { print, translate, checkUpdate } = require('./eazax/editor-util');
+const MainUtil = require('./eazax/main-util');
 
 /**
  * 压缩引擎路径表
  */
 const PNGQUANT_PATHS = {
   /** macOS */
-  'darwin': '../lib/pngquant/macos/pngquant',
+  'darwin': 'lib/pngquant/macos/pngquant',
   /** Windows */
-  'win32': '../lib/pngquant/windows/pngquant.exe',
+  'win32': 'lib/pngquant/windows/pngquant.exe',
 };
 
 /**
@@ -36,16 +37,10 @@ const ASSETS_PATH = Path.join(PROJECT_PATH, 'assets');
 const INTERNAL_PATH = Path.join(ASSETS_PATH, 'internal');
 
 /**
- * 压缩引擎路径
- * @type {string}
- */
-let pngquantPath = null;
-
-/**
  * 压缩命令前缀
  * @type {string}
  */
-let compressCommand = null;
+let commandPrefix = null;
 
 /**
  * 压缩日志
@@ -96,8 +91,8 @@ async function onBuildFinished(options, callback) {
   }
 
   // 获取压缩引擎路径
-  const platform = Os.platform();
-  pngquantPath = Path.join(__dirname, PNGQUANT_PATHS[platform]);
+  const platform = Os.platform(),
+    pngquantPath = Path.join(__dirname, `../${PNGQUANT_PATHS[platform]}`);
 
   // 没有压缩引擎
   if (!Fs.existsSync(pngquantPath)) {
@@ -123,12 +118,13 @@ async function onBuildFinished(options, callback) {
     // colorsParam = config.colors,
     // compressOptions = `${qualityParam} ${speedParam} ${skipParam} ${outputParam} ${writeParam} ${colorsParam}`;
     compressOptions = `${qualityParam} ${speedParam} ${skipParam} ${outputParam} ${writeParam}`;
-  compressCommand = `"${pngquantPath}" ${compressOptions}`;
+  // 压缩命令前缀
+  commandPrefix = `"${pngquantPath}" ${compressOptions}`;
 
   // 需要排除的文件夹
-  excludeFolders = config.excludeFolders ? config.excludeFolders.map(value => Path.normalize(value)) : [];
+  excludeFolders = config.excludeFolders ? config.excludeFolders.map(v => Path.normalize(v)) : [];
   // 需要排除的文件
-  excludeFiles = config.excludeFiles ? config.excludeFiles.map(value => Path.normalize(value)) : [];
+  excludeFiles = config.excludeFiles ? config.excludeFiles.map(v => Path.normalize(v)) : [];
 
   // 重置日志
   logger = {
@@ -175,7 +171,7 @@ async function compress(srcPath) {
     // 加入压缩队列
     tasks.push(new Promise(res => {
       const sizeBefore = stats.size / 1024,
-        command = `${compressCommand} -- "${path}"`;
+        command = `${commandPrefix} -- "${path}"`;
       // pngquant $OPTIONS -- "$FILE"
       exec(command, (error, stdout, stderr) => {
         recordResult(error, sizeBefore, path);
@@ -279,6 +275,24 @@ function printResults() {
   print('log', '压缩日志 >>>' + header + logger.successfulInfo + logger.failedInfo);
 }
 
+/**
+ * （渲染进程）获取配置事件回调
+ * @param {Electron.IpcMainEvent} event 
+ */
+function onGetConfigEvent(event) {
+  const config = ConfigManager.get();
+  event.returnValue = config;
+}
+
+/**
+ * （渲染进程）保存配置事件回调
+ * @param {Electron.IpcMainEvent} event 
+ * @param {{ type: string, content: string }} config 
+ */
+function onSaveConfigEvent(event, config) {
+  ConfigManager.set(config);
+}
+
 module.exports = {
 
   /**
@@ -292,6 +306,13 @@ module.exports = {
      */
     'open-setting-panel'() {
       PanelManager.openSettingPanel();
+    },
+
+    /**
+     * 检查更新
+     */
+    'force-check-update'() {
+      checkUpdate(true);
     },
 
     /**
@@ -323,6 +344,8 @@ module.exports = {
     // 监听事件
     Editor.Builder.on('build-start', onBuildStart);
     Editor.Builder.on('build-finished', onBuildFinished);
+    MainUtil.on('get-config', onGetConfigEvent);
+    MainUtil.on('save-config', onSaveConfigEvent);
   },
 
   /**
@@ -332,6 +355,8 @@ module.exports = {
     // 取消事件监听
     Editor.Builder.removeListener('build-start', onBuildStart);
     Editor.Builder.removeListener('build-finished', onBuildFinished);
+    MainUtil.removeAllListeners('get-config');
+    MainUtil.removeAllListeners('save-config');
   },
 
 };

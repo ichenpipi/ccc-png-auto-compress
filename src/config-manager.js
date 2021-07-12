@@ -1,6 +1,9 @@
 const Fs = require('fs');
 const Path = require('path');
 
+/** 项目路径 */
+const PROJECT_PATH = Editor.Project.path || Editor.projectPath;
+
 /** 配置文件保存目录 */
 const CONFIG_FILE_DIR = 'local';
 
@@ -24,6 +27,7 @@ const ConfigManager = {
         speed: 3,
         excludeFolders: [],
         excludeFiles: [],
+        autoCheckUpdate: true,
     },
 
     /**
@@ -31,8 +35,7 @@ const ConfigManager = {
      * @returns {object}
      */
     get() {
-        const projectPath = Editor.Project.path || Editor.projectPath,
-            configFilePath = Path.join(projectPath, CONFIG_FILE_DIR, CONFIG_FILE_NAME);
+        const configFilePath = Path.join(PROJECT_PATH, CONFIG_FILE_DIR, CONFIG_FILE_NAME);
         const config = { ...this.defaultConfig };
         if (Fs.existsSync(configFilePath)) {
             const localConfig = JSON.parse(Fs.readFileSync(configFilePath, 'utf8'));
@@ -50,12 +53,11 @@ const ConfigManager = {
      */
     set(config) {
         // 查找目录
-        const projectPath = Editor.Project.path || Editor.projectPath,
-            configDirPath = Path.join(projectPath, CONFIG_FILE_DIR);
+        const configDirPath = Path.join(PROJECT_PATH, CONFIG_FILE_DIR);
         if (!Fs.existsSync(configDirPath)) {
             Fs.mkdirSync(configDirPath);
         }
-        const configFilePath = Path.join(projectPath, CONFIG_FILE_DIR, CONFIG_FILE_NAME);
+        const configFilePath = Path.join(configDirPath, CONFIG_FILE_NAME);
         // 读取本地配置
         const localConfig = this.get();
         // 处理数组

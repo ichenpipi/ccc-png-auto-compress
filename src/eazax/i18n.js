@@ -25,7 +25,7 @@ const I18n = {
      * @returns {string}
      */
     translate(lang, key) {
-        return this[lang] ? this[lang][key] : undefined;
+        return this[lang] ? this[lang][key] : key;
     }
 
 };

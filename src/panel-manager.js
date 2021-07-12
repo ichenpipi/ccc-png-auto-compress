@@ -41,10 +41,75 @@ function calcWindowPosition(size, anchor) {
 const PanelManager = {
 
     /**
+     * 设置面板实例
+     * @type {BrowserWindow}
+     */
+    settingPanel: null,
+
+    /**
      * 打开设置面板
      */
     openSettingPanel() {
-        Editor.Panel.open(`${PACKAGE_NAME}.setting`);
+        // Editor.Panel.open(`${PACKAGE_NAME}.setting`);
+        // 已打开则关闭
+        if (this.settingPanel) {
+            this.closeSettingPanel();
+            return;
+        }
+        // 创建窗口
+        const winSize = [500, 615],
+            winPos = calcWindowPosition(winSize, 'center'),
+            win = this.settingPanel = new BrowserWindow({
+                width: winSize[0],
+                height: winSize[1],
+                minWidth: winSize[0],
+                minHeight: winSize[1],
+                x: winPos[0],
+                y: winPos[1] - 100,
+                frame: true,
+                title: `${EXTENSION_NAME} | Cocos Creator`,
+                autoHideMenuBar: true,
+                resizable: true,
+                minimizable: true,
+                maximizable: false,
+                fullscreenable: false,
+                skipTaskbar: false,
+                alwaysOnTop: true,
+                hasShadow: true,
+                show: false,
+                webPreferences: {
+                    nodeIntegration: true,
+                },
+            });
+        // 加载页面（并传递当前语言）
+        win.loadURL(`file://${__dirname}/renderer/setting/index.html?lang=${language}`);
+        // 监听按键（ESC 关闭）
+        win.webContents.on('before-input-event', (event, input) => {
+            if (input.key === 'Escape') this.closeSettingPanel();
+        });
+        // 就绪后展示（避免闪烁）
+        win.on('ready-to-show', () => win.show());
+        // 失焦后（自动关闭）
+        // win.on('blur', () => this.closeSettingPanel());
+        // 关闭后（移除引用）
+        win.on('closed', () => (this.settingPanel = null));
+        // 调试用的 devtools（detach 模式需要取消失焦自动关闭）
+        // win.webContents.openDevTools({ mode: 'detach' });
+    },
+
+    /**
+     * 关闭设置面板
+     */
+    closeSettingPanel() {
+        if (!this.settingPanel) {
+            return;
+        }
+        // 先隐藏再关闭
+        this.settingPanel.hide();
+        // 关闭
+        this.settingPanel.close();
+        // 移除引用
+        this.settingPanel = null;
     },
 
 };

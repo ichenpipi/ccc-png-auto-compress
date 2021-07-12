@@ -20,10 +20,14 @@
     "i18n:MAIN_MENU.package.title/i18n:ccc-png-auto-compress.name/i18n:ccc-png-auto-compress.setting": {
       "message": "ccc-png-auto-compress:open-setting-panel",
       "icon": "/images/setting.png"
+    },
+    "i18n:MAIN_MENU.package.title/i18n:ccc-png-auto-compress.name/i18n:ccc-png-auto-compress.checkUpdate": {
+      "message": "ccc-png-auto-compress:force-check-update",
+      "icon": "/images/update.png"
     }
   },
   "panel.setting": {
-    "main": "src/renderer/setting/index.js",
+    "main": "src/renderer/setting-old/index.js",
     "type": "fixed-size",
     "title": "i18n:ccc-png-auto-compress.name",
     "width": 500,

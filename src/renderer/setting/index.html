@@ -1,51 +1,111 @@
-<div class="main">
-    <!-- 标题 -->
-    <h2>{{titleLabel}}</h2>
-    <ui-box-container class="layout vertical left">
-        <div>
-            <ui-prop name="启用" type="boolean" v-value="enabled" tooltip="· 项目构建完成后自动压缩 PNG 资源"></ui-prop>
-            <!-- <ui-prop name="配置保存目录" tooltip="· 相对于项目根目录的路径">
-                <ui-select class="flex-1" v-value="configSaveDir">
-                    <option value="local">local（默认不参与 Git 同步）</option>
-                    <option value="settings">settings（默认参与 Git 同步）</option>
-                </ui-select>
-            </ui-prop> -->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <!-- 样式 -->
+    <link rel="stylesheet" type="text/css" href="../../eazax/css/cocos-tag.css">
+    <link rel="stylesheet" type="text/css" href="../../eazax/css/cocos-class.css">
+    <link rel="stylesheet" type="text/css" href="index.css">
+    <!-- 脚本 -->
+    <script type="text/javascript" src="../../../lib/vue.global.prod.js" defer></script>
+    <script type="text/javascript" src="index.js" defer></script>
+</head>
+
+<body>
+    <div id="app" v-cloak>
+        <!-- 标题 -->
+        <div class="title">{{ i18n('setting') }}</div>
+        <!-- 配置 -->
+        <div class="properties">
+            <!-- 启用 -->
+            <div class="property">
+                <div class="label">
+                    <span class="text">{{ i18n('enabled') }}</span>
+                    <span class="tooltip">{{ i18n('') }}</span>
+                </div>
+                <div class="content">
+                    <input type="checkbox" v-model="enabled" />
+                </div>
+            </div>
             <hr />
-            <ui-prop name="最低质量（%）" type="number" v-value="minQuality" tooltip="· 最低图像质量"></ui-prop>
-            <ui-prop name="最高质量（%）" type="number" v-value="maxQuality" tooltip="· 最高图像质量"></ui-prop>
-            <!-- <ui-prop name="色彩" type="number" v-value="colors" tooltip="· 图像色彩"></ui-prop> -->
-            <ui-prop slide name="速度" type="number" v-value="speed" min="1" max="10" step="1" precision="0"
-                tooltip="· 压缩速度与质量的权重，默认值为 3。&#10;· 10 档可能会降低 5％ 的质量，但压缩速度比 3 档快 8 倍。">
-            </ui-prop>
+            <!-- 最低质量 -->
+            <div class="property">
+                <div class="label">
+                    <span class="text">{{ i18n('minQuality') }}</span>
+                    <span class="tooltip">{{ i18n('') }}</span>
+                </div>
+                <div class="content">
+                    <input type="number" v-model="minQuality" :placeholder="i18n('')" />
+                </div>
+            </div>
+            <!-- 最高质量 -->
+            <div class="property">
+                <div class="label">
+                    <span class="text">{{ i18n('maxQuality') }}</span>
+                    <span class="tooltip">{{ i18n('') }}</span>
+                </div>
+                <div class="content">
+                    <input type="number" v-model="maxQuality" :placeholder="i18n('')" />
+                </div>
+            </div>
+            <!-- 速度 -->
+            <div class="property">
+                <div class="label">
+                    <span class="text">{{ i18n('speed') }}</span>
+                    <span class="tooltip">{{ i18n('') }}</span>
+                </div>
+                <div class="content">
+                    <input type="range" v-model="speed" min="1" max="10" step="1" />
+                    <input style="flex: none;margin-left: 5px;" type="number" v-model="speed" />
+                </div>
+            </div>
             <hr />
-            <ui-prop name="需要排除的文件夹" tooltip="· 相对于 assets/ 目录的路径&#10;· 多个值之间必须用 ',' 隔开" auto-height>
-                <ui-text-area class="flex-1" type="string" size="big" v-value="excludeFolders"
-                    placeholder="textures/aaa/,&#10;textures/bbb/">
-                </ui-text-area>
-            </ui-prop>
-            <ui-prop name="需要排除的文件" tooltip="· 相对于 assets/ 目录的路径&#10;· 多个值之间必须用 ',' 隔开" auto-height>
-                <ui-text-area class="flex-1" type="string" size="big" v-value="excludeFiles"
-                    placeholder="textures/abc.png,&#10;textures/123.png">
-                </ui-text-area>
-            </ui-prop>
+            <!-- 排除文件夹 -->
+            <div class="property">
+                <div class="label">
+                    <span class="text">{{ i18n('excludeFolders') }}</span>
+                    <span class="tooltip">{{ i18n('') }}</span>
+                </div>
+                <div class="content">
+                    <textarea v-model="excludeFolders" placeholder="textures/aaa/,&#10;textures/bbb/"></textarea>
+                </div>
+            </div>
+            <!-- 排除文件 -->
+            <div class="property">
+                <div class="label">
+                    <span class="text">{{ i18n('excludeFiles') }}</span>
+                    <span class="tooltip">{{ i18n('') }}</span>
+                </div>
+                <div class="content">
+                    <textarea v-model="excludeFiles" placeholder="textures/abc.png,&#10;textures/123.png"></textarea>
+                </div>
+            </div>
+            <!-- 自动检查更新 -->
+            <div class="property">
+                <div class="label">
+                    <span class="text">{{ i18n('autoCheck') }}</span>
+                    <span class="tooltip">{{ i18n('autoCheckTooltip') }}</span>
+                </div>
+                <div class="content">
+                    <input type="checkbox" v-model="autoCheckUpdate" />
+                </div>
+            </div>
             <hr />
-            <ui-hint style="line-height: 19px;">
-                💡 小贴士：如果 Spine Skeleton 或 DragonBones 的纹理在压缩后出现透明度丢失的情况，可以参考以下两种解决方案（二选一）：
-                <br>
-                - 自行勾选 Spine Skeleton 或 DragonBones 纹理的 Premultiply Alpha（预乘）属性
-                <br>
-                - 在配置面板中配置排除 Spine Skeleton 或 DragonBones 的纹理，不进行压缩
-            </ui-hint>
-            <hr />
+            <!-- 提示 -->
+            <div class="tip" style="font-size: 11px;line-height: 19px;">
+                <span>{{ i18n('tips') }}</span>
+            </div>
             <!-- Git 仓库 -->
-            <ui-hint class="tip" style="margin-top: 5px;">
-                <ui-markdown style="height: 48px;" v-value="repositoryLabel"></ui-markdown>
-            </ui-hint>
-            <hr />
+            <div class="tip">
+                <span>{{ i18n('repository') }}</span>
+                <a :href="repositoryUrl" target="_blank">{{ packageName }}</a>
+            </div>
+            <div class="line"></div>
+            <!-- 应用按钮 -->
+            <button class="apply-btn" @click="onApplyBtnClick">{{ i18n('apply') }}</button>
         </div>
-        <!-- 应用按钮 -->
-        <ui-button class="button blue big" @click="onApplyBtnClick" v-disabled="isProcessing">{{applyLabel}}
-        </ui-button>
-    </ui-box-container>
-    <br>
-</div>
+    </div>
+</body>
+
+</html>
