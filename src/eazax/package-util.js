@@ -9,7 +9,7 @@ const PACKAGE_JSON = require('../../package.json');
 const PackageUtil = {
 
     /**
-     * 名称
+     * 包名
      * @type {string}
      */
     get name() {

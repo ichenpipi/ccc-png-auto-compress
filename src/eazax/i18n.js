@@ -25,7 +25,10 @@ const I18n = {
      * @returns {string}
      */
     translate(lang, key) {
-        return this[lang] ? this[lang][key] : key;
+        if (this[lang] && this[lang][key]) {
+            return this[lang][key];
+        }
+        return key;
     }
 
 };
