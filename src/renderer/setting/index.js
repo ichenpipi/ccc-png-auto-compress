@@ -116,6 +116,8 @@ const App = {
   mounted() {
     // 获取配置
     this.getConfig();
+    // 监听鼠标滚轮变化（不监听的话数字输入框内滚轮会没反应）
+    window.addEventListener('mousewheel', () => { });
     // 覆盖 a 标签点击回调（使用默认浏览器打开网页）
     const links = document.querySelectorAll('a[href]');
     links.forEach((link) => {

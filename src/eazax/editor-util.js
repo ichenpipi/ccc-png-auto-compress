@@ -4,22 +4,13 @@ const Updater = require('./updater');
 /** 编辑器语言 */
 const LANG = Editor.lang;
 
-/**
- * i18n
- * @param {string} key
- * @returns {string}
- */
-function translate(key) {
-    return I18n.translate(LANG, key);
-}
-
 /** 扩展名称 */
-const EXTENSION_NAME = translate('name');
+const EXTENSION_NAME = I18n.translate(LANG, 'name');
 
 /**
  * 编辑器主进程工具 (Cocos Creator 2.x)
  * @author ifaswind (陈皮皮)
- * @version 20210711
+ * @version 20210714
  */
 const EditorUtil = {
 
@@ -35,7 +26,9 @@ const EditorUtil = {
      * @param {string} key 关键词
      * @returns {string}
      */
-    translate,
+    translate(key) {
+        return I18n.translate(LANG, key);
+    },
 
     /**
      * 打印信息到控制台
