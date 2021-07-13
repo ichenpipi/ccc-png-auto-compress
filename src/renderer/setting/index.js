@@ -1,17 +1,10 @@
 const { getUrlParam } = require('../../utils/browser-util');
+const PackageUtil = require('../../eazax/package-util');
 const I18n = require('../../eazax/i18n');
 const RendererUtil = require('../../eazax/renderer-util');
-const PackageUtil = require('../../eazax/package-util');
 
 /** 语言 */
 const LANG = getUrlParam('lang');
-
-/**
- * i18n
- * @param {string} key
- * @returns {string}
- */
-const translate = (key) => I18n.translate(LANG, key);
 
 // 应用
 const App = {
@@ -49,11 +42,7 @@ const App = {
      */
     speed(value) {
       value = Math.floor(value);
-      if (value < 1) {
-        value = 1;
-      } else if (value > 10) {
-        value = 10;
-      }
+      value = Math.min(Math.max(value, 1), 10);
       this.speed = value;
     },
 
@@ -69,7 +58,7 @@ const App = {
      * @param {string} key 
      */
     i18n(key) {
-      return translate(key);
+      return I18n.translate(LANG, key);
     },
 
     /**

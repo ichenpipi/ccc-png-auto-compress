@@ -22,7 +22,7 @@
             <div class="property">
                 <div class="label">
                     <span class="text">{{ i18n('enabled') }}</span>
-                    <span class="tooltip">{{ i18n('') }}</span>
+                    <span class="tooltip">{{ i18n('enabledTooltip') }}</span>
                 </div>
                 <div class="content">
                     <input type="checkbox" v-model="enabled" />
@@ -33,31 +33,31 @@
             <div class="property">
                 <div class="label">
                     <span class="text">{{ i18n('minQuality') }}</span>
-                    <span class="tooltip">{{ i18n('') }}</span>
+                    <span class="tooltip">{{ i18n('minQualityTooltip') }}</span>
                 </div>
                 <div class="content">
-                    <input type="number" v-model="minQuality" :placeholder="i18n('')" />
+                    <input type="number" v-model="minQuality" min="1" max="100" step="1" :placeholder="i18n('')" />
                 </div>
             </div>
             <!-- 最高质量 -->
             <div class="property">
                 <div class="label">
                     <span class="text">{{ i18n('maxQuality') }}</span>
-                    <span class="tooltip">{{ i18n('') }}</span>
+                    <span class="tooltip">{{ i18n('maxQualityTooltip') }}</span>
                 </div>
                 <div class="content">
-                    <input type="number" v-model="maxQuality" :placeholder="i18n('')" />
+                    <input type="number" v-model="maxQuality" min="1" max="100" step="1" :placeholder="i18n('')" />
                 </div>
             </div>
             <!-- 速度 -->
             <div class="property">
                 <div class="label">
                     <span class="text">{{ i18n('speed') }}</span>
-                    <span class="tooltip">{{ i18n('') }}</span>
+                    <span class="tooltip">{{ i18n('speedTooltip') }}</span>
                 </div>
                 <div class="content">
                     <input type="range" v-model="speed" min="1" max="10" step="1" />
-                    <input style="flex: none;margin-left: 5px;" type="number" v-model="speed" />
+                    <input style="flex: none;margin-left: 5px;" type="number" v-model="speed" step="1" />
                 </div>
             </div>
             <hr />
@@ -65,7 +65,7 @@
             <div class="property">
                 <div class="label">
                     <span class="text">{{ i18n('excludeFolders') }}</span>
-                    <span class="tooltip">{{ i18n('') }}</span>
+                    <span class="tooltip">{{ i18n('excludeFoldersTooltip') }}</span>
                 </div>
                 <div class="content">
                     <textarea v-model="excludeFolders" placeholder="textures/aaa/,&#10;textures/bbb/"></textarea>
@@ -75,7 +75,7 @@
             <div class="property">
                 <div class="label">
                     <span class="text">{{ i18n('excludeFiles') }}</span>
-                    <span class="tooltip">{{ i18n('') }}</span>
+                    <span class="tooltip">{{ i18n('excludeFilesTooltip') }}</span>
                 </div>
                 <div class="content">
                     <textarea v-model="excludeFiles" placeholder="textures/abc.png,&#10;textures/123.png"></textarea>
@@ -84,8 +84,8 @@
             <!-- 自动检查更新 -->
             <div class="property">
                 <div class="label">
-                    <span class="text">{{ i18n('autoCheck') }}</span>
-                    <span class="tooltip">{{ i18n('autoCheckTooltip') }}</span>
+                    <span class="text">{{ i18n('autoCheckUpdate') }}</span>
+                    <span class="tooltip">{{ i18n('autoCheckUpdateTooltip') }}</span>
                 </div>
                 <div class="content">
                     <input type="checkbox" v-model="autoCheckUpdate" />
@@ -94,14 +94,14 @@
             <hr />
             <!-- 提示 -->
             <div class="tip" style="font-size: 11px;line-height: 19px;">
-                <span>{{ i18n('tips') }}</span>
+                <span>{{ i18n('skeletonTips') }}</span>
             </div>
             <!-- Git 仓库 -->
             <div class="tip">
                 <span>{{ i18n('repository') }}</span>
                 <a :href="repositoryUrl" target="_blank">{{ packageName }}</a>
             </div>
-            <div class="line"></div>
+            <hr>
             <!-- 应用按钮 -->
             <button class="apply-btn" @click="onApplyBtnClick">{{ i18n('apply') }}</button>
         </div>
