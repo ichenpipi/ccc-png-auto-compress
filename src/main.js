@@ -61,6 +61,45 @@ let excludeFolders = null;
 let excludeFiles = null;
 
 /**
+ * 生命周期：加载
+ */
+function load() {
+  Editor.Builder.on('build-start', onBuildStart);
+  Editor.Builder.on('build-finished', onBuildFinished);
+  MainUtil.on('get-config', onGetConfigEvent);
+  MainUtil.on('set-config', onSetConfigEvent);
+}
+
+/**
+ * 生命周期：加载
+ */
+function unload() {
+  Editor.Builder.removeListener('build-start', onBuildStart);
+  Editor.Builder.removeListener('build-finished', onBuildFinished);
+  MainUtil.removeAllListeners('get-config');
+  MainUtil.removeAllListeners('set-config');
+}
+
+/**
+ * （渲染进程）获取配置事件回调
+ * @param {Electron.IpcMainEvent} event 
+ */
+function onGetConfigEvent(event) {
+  const config = ConfigManager.get();
+  event.returnValue = config;
+}
+
+/**
+ * （渲染进程）保存配置事件回调
+ * @param {Electron.IpcMainEvent} event 
+ * @param {{ type: string, content: string }} config 
+ */
+function onSetConfigEvent(event, config) {
+  const path = ConfigManager.set(config);
+  print('log', translate('configSaved'), path);
+}
+
+/**
 * 构建开始回调
 * @param {BuildOptions} options 
 * @param {Function} callback 
@@ -275,24 +314,6 @@ function printResults() {
   print('log', '压缩日志 >>>' + header + logger.successfulInfo + logger.failedInfo);
 }
 
-/**
- * （渲染进程）获取配置事件回调
- * @param {Electron.IpcMainEvent} event 
- */
-function onGetConfigEvent(event) {
-  const config = ConfigManager.get();
-  event.returnValue = config;
-}
-
-/**
- * （渲染进程）保存配置事件回调
- * @param {Electron.IpcMainEvent} event 
- * @param {{ type: string, content: string }} config 
- */
-function onSaveConfigEvent(event, config) {
-  ConfigManager.set(config);
-}
-
 module.exports = {
 
   /**
@@ -315,48 +336,10 @@ module.exports = {
       checkUpdate(true);
     },
 
-    /**
-     * 读取配置
-     * @param {any} event 
-     */
-    'read-config'(event) {
-      const config = ConfigManager.get();
-      event.reply(null, config);
-    },
-
-    /**
-     * 保存配置
-     * @param {any} event 
-     * @param {any} config 
-     */
-    'save-config'(event, config) {
-      const configFilePath = ConfigManager.set(config);
-      print('log', translate('configSaved'), configFilePath);
-      event.reply(null, true);
-    },
-
   },
 
-  /**
-   * 生命周期：加载
-   */
-  load() {
-    // 监听事件
-    Editor.Builder.on('build-start', onBuildStart);
-    Editor.Builder.on('build-finished', onBuildFinished);
-    MainUtil.on('get-config', onGetConfigEvent);
-    MainUtil.on('save-config', onSaveConfigEvent);
-  },
+  load,
 
-  /**
-   * 生命周期：加载
-   */
-  unload() {
-    // 取消事件监听
-    Editor.Builder.removeListener('build-start', onBuildStart);
-    Editor.Builder.removeListener('build-finished', onBuildFinished);
-    MainUtil.removeAllListeners('get-config');
-    MainUtil.removeAllListeners('save-config');
-  },
+  unload,
 
 };

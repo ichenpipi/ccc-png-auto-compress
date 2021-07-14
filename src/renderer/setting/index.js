@@ -105,7 +105,7 @@ const App = {
         speed: this.speed,
       };
       // （主进程）保存配置
-      RendererUtil.sendSync('save-config', config);
+      RendererUtil.sendSync('set-config', config);
     },
 
   },
