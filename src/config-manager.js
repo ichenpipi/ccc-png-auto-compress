@@ -35,8 +35,8 @@ const ConfigManager = {
      * @returns {object}
      */
     get() {
+        const config = JSON.parse(JSON.stringify(this.defaultConfig));
         const configFilePath = Path.join(PROJECT_PATH, CONFIG_FILE_DIR, CONFIG_FILE_NAME);
-        const config = { ...this.defaultConfig };
         if (Fs.existsSync(configFilePath)) {
             const localConfig = JSON.parse(Fs.readFileSync(configFilePath, 'utf8'));
             for (const key in localConfig) {
@@ -52,14 +52,8 @@ const ConfigManager = {
      * @returns {string}
      */
     set(config) {
-        // 查找目录
-        const configDirPath = Path.join(PROJECT_PATH, CONFIG_FILE_DIR);
-        if (!Fs.existsSync(configDirPath)) {
-            Fs.mkdirSync(configDirPath);
-        }
-        const configFilePath = Path.join(configDirPath, CONFIG_FILE_NAME);
         // 读取本地配置
-        const localConfig = this.get();
+        const localConfig = ConfigManager.get();
         // 处理数组
         for (const key in config) {
             let value = config[key];
@@ -68,8 +62,15 @@ const ConfigManager = {
             }
             localConfig[key] = value;
         }
+        // 拼接路径
+        const configDirPath = Path.join(PROJECT_PATH, CONFIG_FILE_DIR);
+        if (!Fs.existsSync(configDirPath)) {
+            Fs.mkdirSync(configDirPath);
+        }
+        const configFilePath = Path.join(configDirPath, CONFIG_FILE_NAME);
         // 写入配置
         Fs.writeFileSync(configFilePath, JSON.stringify(localConfig, null, 2));
+        // 返回配置文件路径
         return configFilePath;
     },
 
